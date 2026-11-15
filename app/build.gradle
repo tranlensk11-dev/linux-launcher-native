@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.linux.launcher'
-    compileSdk 33 // Sửa thành 33
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.linux.launcher"
-        minSdk 26
-        targetSdk 33 // Sửa thành 33
+        minSdk 24
+        targetSdk 33
         versionCode 1
         versionName "1.0"
     }
@@ -30,6 +30,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.1'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    // Đã xóa toàn bộ thư viện ngoài để tránh xung đột
 }
