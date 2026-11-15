@@ -205,6 +205,17 @@
             if (appObj.target) { const targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; targetEl.textContent = appObj.target; div.appendChild(targetEl); }
             div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openAppCtxMenu(e.clientX, e.clientY, activeIndex, appIdx, div, appObj); });
             attachLongPress(div, (x, y) => openAppCtxMenu(x, y, activeIndex, appIdx, div, appObj));
+            
+            // ==========================================
+            // THÊM SỰ KIỆN CLICK ĐỂ MỞ APP Ở CHẾ ĐỘ TỰ DO
+            // ==========================================
+            div.addEventListener('click', () => {
+                if (appObj.target && window.AndroidApp) {
+                    window.AndroidApp.openApp(appObj.target);
+                    dropdown.classList.remove('show');
+                }
+            });
+            
             subList.appendChild(div);
           });
         }
@@ -292,4 +303,4 @@
     })();
   </script>
 </body>
-    </html>
+  </html>
