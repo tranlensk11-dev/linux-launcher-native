@@ -21,7 +21,6 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         
-        // Nếu chưa được cấp quyền hiển thị trên app khác thì dừng lại (chống crash)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             stopSelf()
             return
@@ -52,7 +51,6 @@ class OverlayService : Service() {
 
             windowManager.addView(overlayView, params)
         } catch (e: Exception) {
-            // Chống crash nếu hệ thống không cho phép vẽ
             stopSelf()
         }
     }
