@@ -30,5 +30,6 @@ android {
 }
 
 dependencies {
-    // Đã xóa toàn bộ thư viện ngoài để tránh xung đột
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.10.1'
 }
