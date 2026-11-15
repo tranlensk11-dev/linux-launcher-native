@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Quyền hiển thị trên ứng dụng khác (Thanh tác vụ nổi) -->
+    <!-- Quyền hiển thị thanh tác vụ trên các ứng dụng khác -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <!-- Quyền xem danh sách ứng dụng đã cài (Để lấy tên package) -->
+    <!-- Quyền truy vấn danh sách ứng dụng -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
@@ -11,17 +11,15 @@
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="Linux Launcher"
         android:usesCleartextTraffic="true"
-        android:resizeableActivity="true"
         android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
 
-        <!-- Activity chính (Sẽ tự động ẩn đi và bật thanh nổi) -->
+        <!-- Activity chính đóng vai trò Launcher -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <!-- Quyền làm màn hình chính (Launcher) -->
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
