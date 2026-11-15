@@ -8,93 +8,137 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; touch-action: manipulation; }
+    
+    /* CSS cho Video nền */
+    #bg-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+    }
+
     body { background-size: cover; background-position: center; background-repeat: no-repeat; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-    #fileInput { display: none; }
+    #fileInput, #videoInput { display: none; }
+    
+    /* Trả thanh top-bar về độ dày 32px ban đầu */
     .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 32px; background: rgba(255, 255, 255, 0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 10000; pointer-events: none; }
-    .clock { position: fixed; top: 0; right: 12px; height: 32px; display: flex; align-items: center; color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); z-index: 10001; pointer-events: none; white-space: nowrap; }
-    .square-icon { position: fixed; top: 0; left: 8px; width: 32px; height: 32px; z-index: 10002; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .square-icon img { width: 24px; height: 24px; object-fit: cover; }
+    .clock { position: fixed; top: 0; right: 12px; height: 32px; display: flex; align-items: center; color: #fff; font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 500; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); z-index: 10001; pointer-events: none; white-space: nowrap; }
+    
+    .square-icon { position: fixed; top: 0; left: 8px; height: 32px; width: 32px; z-index: 10002; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .square-icon img { width: 24px; height: 24px; object-fit: contain; display: block; }
+
+    /* Vùng bấm mở rộng (Hitbox) kéo dài xuống dưới để dễ chạm, không ảnh hưởng giao diện */
+    .hitbox-dropdown {
+      position: fixed;
+      top: 0; left: 0;
+      width: 60px; 
+      height: 90px; 
+      z-index: 10001;
+      cursor: pointer;
+      background: transparent;
+    }
+
     .dropdown { position: fixed; top: 32px; left: 0; background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); width: 300px; max-width: 100vw; height: 480px; max-height: calc(100vh - 32px - 40px); display: none; flex-direction: column; z-index: 10003; overflow: hidden; }
     .dropdown.show { display: flex; }
+    
     .search-bar { padding: 8px 12px; flex-shrink: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-    .search-bar input { width: 100%; padding: 8px 14px; background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid #3b82f6; outline: none; border-radius: 16px; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; }
+    .search-bar input { width: 100%; padding: 8px 14px; background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid #3b82f6; outline: none; border-radius: 16px; font-family: system-ui, sans-serif; font-size: 13px; }
     .search-bar input::placeholder { color: rgba(255, 255, 255, 0.5); }
-    .search-bar input:focus { border-color: #60a5fa; }
+    
     .body-area { display: flex; flex: 1; min-height: 0; }
     .main-column, .sub-column { width: 50%; flex-shrink: 0; display: flex; flex-direction: column; min-width: 0; position: relative; }
     .sub-column { background: rgba(0, 0, 0, 0.2); }
     .main-list, .sub-list { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.3) transparent; padding: 0 0 36px 0; display: flex; flex-direction: column; }
     .sub-list { padding: 4px 0 36px 0; }
-    .main-list::-webkit-scrollbar, .sub-list::-webkit-scrollbar { width: 6px; }
-    .main-list::-webkit-scrollbar-track, .sub-list::-webkit-scrollbar-track { background: transparent; }
-    .main-list::-webkit-scrollbar-thumb, .sub-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 3px; }
-    .dropdown-item { width: 100%; padding: 10px 12px; color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; text-align: left; cursor: pointer; background: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid rgba(255, 255, 255, 0.05); outline: none; }
-    .dropdown-item:focus-visible, .sub-item:focus-visible { background: rgba(96, 165, 250, 0.25); }
+    
+    .dropdown-item { width: 100%; padding: 10px 12px; color: #fff; font-family: system-ui, sans-serif; font-size: 13px; text-align: left; cursor: pointer; background: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid rgba(255, 255, 255, 0.05); outline: none; }
     .dropdown-item.active { background: rgba(255, 255, 255, 0.18); }
-    .add-btn, .add-sub-btn { position: absolute; left: 0; bottom: 0; width: 100%; padding: 8px 10px; color: #60a5fa; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.3px; cursor: pointer; text-align: left; background: rgba(30, 30, 30, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.08); box-sizing: border-box; }
-    .add-sub-btn { background: rgba(20, 20, 20, 0.45); }
-    .sub-item { padding: 8px 16px; color: rgba(255, 255, 255, 0.85); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none; display: flex; flex-direction: column; gap: 1px; }
+    
+    .add-btn, .add-sub-btn { position: absolute; left: 0; bottom: 0; width: 100%; padding: 8px 10px; color: #60a5fa; font-family: system-ui, sans-serif; font-size: 11px; cursor: pointer; text-align: left; background: rgba(30, 30, 30, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.08); box-sizing: border-box; }
+    
+    .sub-item { padding: 8px 16px; color: rgba(255, 255, 255, 0.85); font-family: system-ui, sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; flex-direction: column; gap: 1px; }
     .sub-item-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sub-item-target { font-size: 10px; font-weight: 400; color: rgba(255, 255, 255, 0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.2px; }
-    .empty-text { padding: 12px 16px; color: rgba(255, 255, 255, 0.4); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.3px; text-align: center; }
+    .sub-item-target { font-size: 10px; color: rgba(255, 255, 255, 0.45); }
+    
+    .empty-text { padding: 12px 16px; color: rgba(255, 255, 255, 0.4); font-size: 12px; text-align: center; }
+    
     .bottom-bar { flex-shrink: 0; height: 36px; background: rgba(255, 255, 255, 0.06); border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; position: relative; }
-    .bottom-logo { margin-left: 12px; height: 20px; width: 20px; object-fit: contain; }
-    .bottom-label { margin-left: 8px; color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; }
-    .ctx-menu { position: fixed; background: rgba(35, 35, 35, 0.98); border: 1px solid rgba(255, 255, 255, 0.15); padding: 0; z-index: 45000; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; color: #fff; min-width: 140px; border-radius: 0; overflow: hidden; }
+    .bottom-logo { margin-left: 12px; height: 20px; width: 20px; object-fit: contain; display: block; }
+    .bottom-label { margin-left: 8px; color: #fff; font-family: system-ui, sans-serif; font-size: 13px; font-weight: 500; }
+    
+    .ctx-menu { position: fixed; background: rgba(35, 35, 35, 0.98); border: 1px solid rgba(255, 255, 255, 0.15); padding: 0; z-index: 45000; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); font-family: system-ui, sans-serif; font-size: 13px; color: #fff; min-width: 140px; overflow: hidden; }
     .ctx-menu .ctx-item { padding: 8px 14px; cursor: pointer; white-space: nowrap; }
     .ctx-menu .ctx-item:hover { background: rgba(255, 255, 255, 0.12); }
     .ctx-menu .ctx-item.danger { color: #f87171; }
-    .rename-input { width: 100%; padding: 2px 4px; background: #1e1e1e; color: #fff; border: 1px solid #3b82f6; outline: none; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.3px; border-radius: 2px; box-sizing: border-box; }
+    .rename-input { width: 100%; padding: 2px 4px; background: #1e1e1e; color: #fff; border: 1px solid #3b82f6; outline: none; font-size: 13px; border-radius: 2px; box-sizing: border-box; }
     .rename-target-input { font-size: 11px; padding: 1px 3px; }
   </style>
 </head>
 <body>
+
+  <video id="bg-video" autoplay loop muted playsinline style="display:none;"></video>
+
   <div class="top-bar"></div>
   <div class="clock" id="clock"></div>
-  <div class="square-icon" id="squareIcon" role="button" aria-label="Mở menu" tabindex="0">
-    <img src="test.png" alt="menu">
+  
+  <div class="square-icon" id="squareIcon" role="button" tabindex="0">
+    <img src="file:///android_asset/test.png" alt="menu">
   </div>
-  <div class="dropdown" id="dropdown" role="menu">
+
+  <!-- Vùng bấm ẩn kéo dài xuống dưới -->
+  <div class="hitbox-dropdown" id="hitboxDropdown"></div>
+  
+  <div class="dropdown" id="dropdown">
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Tìm kiếm..." aria-label="Tìm kiếm">
+      <input type="text" id="searchInput" placeholder="Tìm kiếm...">
     </div>
     <div class="body-area">
       <div class="main-column">
-        <div class="main-list" id="mainList" role="listbox" aria-label="Danh sách mục"></div>
-        <div class="add-btn" id="addMainBtn" role="button" tabindex="0">+ Mục</div>
+        <div class="main-list" id="mainList"></div>
+        <div class="add-btn" id="addMainBtn">+ Mục</div>
       </div>
       <div class="sub-column">
-        <div class="sub-list" id="subList" role="listbox" aria-label="Danh sách app"></div>
-        <div class="add-sub-btn" id="addSubBtn" style="display:none;" role="button" tabindex="0">+ Thêm app</div>
+        <div class="sub-list" id="subList"></div>
+        <div class="add-sub-btn" id="addSubBtn" style="display:none;">+ Thêm app</div>
       </div>
     </div>
     <div class="bottom-bar">
-      <img src="logo.png" alt="logo" class="bottom-logo">
+      <img src="file:///android_asset/logo.png" class="bottom-logo">
       <span class="bottom-label">linux</span>
     </div>
   </div>
+
   <input type="file" id="fileInput" accept="image/*">
+  <input type="file" id="videoInput" accept="video/*">
+
   <script>
     (function() {
       'use strict';
-      
-      // Bọc toàn bộ trong try-catch để chống văng app nếu có lỗi JS
       try {
         const fileInput      = document.getElementById('fileInput');
+        const videoInput     = document.getElementById('videoInput');
+        const bgVideo        = document.getElementById('bg-video');
         const clock          = document.getElementById('clock');
         const squareIcon     = document.getElementById('squareIcon');
+        const hitboxDropdown = document.getElementById('hitboxDropdown');
         const dropdown       = document.getElementById('dropdown');
         const searchInput    = document.getElementById('searchInput');
         const mainList       = document.getElementById('mainList');
         const subList        = document.getElementById('subList');
         const addMainBtn     = document.getElementById('addMainBtn');
         const addSubBtn      = document.getElementById('addSubBtn');
+        
         const LS_SECTIONS = 'linuxweb_sections_v2';
         const LS_ACTIVE   = 'linuxweb_activeIndex_v2';
-        const LS_BG       = 'linuxweb_background';
+        const LS_BG_IMG   = 'linuxweb_bg_img';
+        const LS_BG_VID   = 'linuxweb_bg_vid';
+
         let sections = loadSections();
         let activeIndex = loadActive();
         let searchTerm = '';
+
         function normalizeApps(arr) {
           arr.forEach((sec) => {
             if (!Array.isArray(sec.apps)) sec.apps = [];
@@ -122,6 +166,7 @@
         }
         function saveSections() { try { localStorage.setItem(LS_SECTIONS, JSON.stringify(sections)); } catch (e) {} }
         function saveActive() { try { localStorage.setItem(LS_ACTIVE, String(activeIndex)); } catch (e) {} }
+
         let ctxMenuEl = null;
         let renamingEl = null;
         function closeCtxMenu() { if (ctxMenuEl) { ctxMenuEl.remove(); ctxMenuEl = null; } }
@@ -132,6 +177,7 @@
           if (!nameEl || !nameEl.parentNode) return;
           if (mode === 'target') { nameEl.textContent = originalTarget; if (!originalTarget && targetEl && targetEl.parentNode) targetEl.remove(); } else { nameEl.textContent = originalText; }
         }
+        
         function startInlineRename(el, currentName, onCommit) {
           cancelRename(); closeCtxMenu();
           let nameEl = el;
@@ -147,13 +193,14 @@
           input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
           input.addEventListener('blur', commit); input.addEventListener('click', (e) => e.stopPropagation()); input.addEventListener('pointerdown', (e) => e.stopPropagation());
         }
+        
         function startInlineTargetEdit(el, currentTarget, onCommit) {
           cancelRename(); closeCtxMenu();
           if (!el.classList.contains('sub-item')) return;
           let targetEl = el.querySelector('.sub-item-target');
           if (!targetEl) { targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; el.appendChild(targetEl); }
           const originalTarget = targetEl.textContent; targetEl.textContent = '';
-          const input = document.createElement('input'); input.type = 'text'; input.className = 'rename-input rename-target-input'; input.value = currentTarget; input.maxLength = 300; input.placeholder = 'com.example.app hoặc https://...';
+          const input = document.createElement('input'); input.type = 'text'; input.className = 'rename-input rename-target-input'; input.value = currentTarget; input.maxLength = 300; input.placeholder = 'com.example.app';
           targetEl.appendChild(input);
           renamingEl = { el, nameEl: targetEl, targetEl, originalText: originalTarget, originalTarget, mode: 'target' };
           input.focus(); input.select();
@@ -163,6 +210,7 @@
           input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
           input.addEventListener('blur', commit); input.addEventListener('click', (e) => e.stopPropagation()); input.addEventListener('pointerdown', (e) => e.stopPropagation());
         }
+
         function showCtxMenu(x, y, items) {
           closeCtxMenu();
           const menu = document.createElement('div'); menu.className = 'ctx-menu';
@@ -180,6 +228,7 @@
           menu.style.left = left + 'px'; menu.style.top = top + 'px';
         }
         document.addEventListener('click', closeCtxMenu); document.addEventListener('scroll', closeCtxMenu, true); window.addEventListener('resize', closeCtxMenu);
+
         function renderMain() {
           mainList.innerHTML = '';
           const filtered = sections.map((s, i) => ({ s, i })).filter(({ s }) => !searchTerm || s.name.toLowerCase().includes(searchTerm));
@@ -187,12 +236,12 @@
           filtered.forEach(({ s, i }) => {
             const div = document.createElement('div');
             div.className = 'dropdown-item' + (i === activeIndex ? ' active' : ''); div.textContent = s.name; div.dataset.index = i;
-            div.setAttribute('role', 'option'); div.setAttribute('tabindex', '0'); div.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
             div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openSectionCtxMenu(e.clientX, e.clientY, i, div); });
             attachLongPress(div, (x, y) => openSectionCtxMenu(x, y, i, div));
             mainList.appendChild(div);
           });
         }
+
         function renderSub() {
           subList.innerHTML = '';
           if (activeIndex < 0 || !sections[activeIndex]) {
@@ -203,13 +252,13 @@
           if (apps.length === 0) { const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = 'Chưa có app nào'; subList.appendChild(empty); } 
           else {
             apps.forEach((appObj, appIdx) => {
-              const div = document.createElement('div'); div.className = 'sub-item'; div.setAttribute('role', 'option'); div.setAttribute('tabindex', '0');
+              const div = document.createElement('div'); div.className = 'sub-item';
               const nameEl = document.createElement('div'); nameEl.className = 'sub-item-name'; nameEl.textContent = appObj.name; div.appendChild(nameEl);
               if (appObj.target) { const targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; targetEl.textContent = appObj.target; div.appendChild(targetEl); }
+              
               div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openAppCtxMenu(e.clientX, e.clientY, activeIndex, appIdx, div, appObj); });
               attachLongPress(div, (x, y) => openAppCtxMenu(x, y, activeIndex, appIdx, div, appObj));
               
-              // Sự kiện click mở App
               div.addEventListener('click', () => {
                   if (appObj.target && window.AndroidApp) {
                       window.AndroidApp.openApp(appObj.target);
@@ -222,12 +271,14 @@
           }
           addSubBtn.style.display = 'block';
         }
+
         function openSectionCtxMenu(x, y, sectionIdx, el) {
           const section = sections[sectionIdx]; if (!section) return; const items = [];
           items.push({ label: 'Đổi tên', action: () => { startInlineRename(el, section.name, (newName) => { section.name = newName; refresh(); }); } });
           items.push({ label: 'Xóa', danger: true, action: () => { sections.splice(sectionIdx, 1); if (activeIndex >= sections.length) activeIndex = sections.length - 1; if (activeIndex < 0) activeIndex = 0; refresh(); } });
           showCtxMenu(x, y, items);
         }
+        
         function openAppCtxMenu(x, y, sectionIdx, appIdx, el, appObj) {
           const section = sections[sectionIdx]; if (!section) return; const items = [];
           items.push({ label: 'Đổi tên', action: () => { startInlineRename(el, appObj.name, (newName) => { section.apps[appIdx].name = newName; refresh(); }); } });
@@ -235,6 +286,7 @@
           items.push({ label: 'Xóa', danger: true, action: () => { section.apps.splice(appIdx, 1); refresh(); } });
           showCtxMenu(x, y, items);
         }
+
         function attachLongPress(el, callback) {
           let timer = null; let startX = 0, startY = 0; let fired = false;
           const cancel = () => { clearTimeout(timer); timer = null; };
@@ -243,7 +295,9 @@
           el.addEventListener('pointerup', () => cancel()); el.addEventListener('pointercancel', () => cancel()); el.addEventListener('pointerleave', () => cancel());
           el.addEventListener('click', (e) => { if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
         }
+
         function refresh() { renderMain(); renderSub(); saveSections(); saveActive(); }
+
         addMainBtn.addEventListener('click', (e) => {
           e.stopPropagation(); cancelRename(); closeCtxMenu();
           let n = 1; const existing = new Set(sections.map(s => s.name));
@@ -252,6 +306,7 @@
           if (activeIndex < 0) activeIndex = sections.length - 1;
           refresh();
         });
+        
         addSubBtn.addEventListener('click', (e) => {
           e.stopPropagation(); cancelRename(); closeCtxMenu();
           if (activeIndex < 0 || !sections[activeIndex]) return;
@@ -261,39 +316,89 @@
           arr.push({ name: 'App ' + n, target: '' });
           refresh();
         });
+        
         mainList.addEventListener('click', (e) => {
           e.stopPropagation(); if (renamingEl) return;
           const item = e.target.closest('.dropdown-item'); if (!item) return;
           activeIndex = Number(item.dataset.index);
           searchTerm = ''; searchInput.value = ''; refresh();
         });
-        mainList.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { const item = e.target.closest('.dropdown-item'); if (item && !renamingEl) { e.preventDefault(); item.click(); } }
-        });
+
         searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.trim().toLowerCase(); renderMain(); });
+
         function toggleDropdown() { dropdown.classList.toggle('show'); }
+        
         squareIcon.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
-        squareIcon.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } });
-        document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && !squareIcon.contains(e.target)) { dropdown.classList.remove('show'); } });
+        hitboxDropdown.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
+
+        document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && !squareIcon.contains(e.target) && !hitboxDropdown.contains(e.target)) { dropdown.classList.remove('show'); } });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { dropdown.classList.remove('show'); closeCtxMenu(); cancelRename(); } });
-        const LONG_PRESS_MS = 500; const MOVE_THRESHOLD = 10;
+
+        // ===== Xử lý hình nền (Ảnh & Video) =====
+        const LONG_PRESS_MS = 500;
         let pressTimer = null; let pressStartX = 0, pressStartY = 0;
-        function isInteractiveTarget(el) { if (!el) return false; return (squareIcon.contains(el) || dropdown.contains(el) || el === fileInput || el.closest('.top-bar') || el.closest('.clock') || el.closest('.ctx-menu')); }
         function cancelPress() { clearTimeout(pressTimer); pressTimer = null; }
-        document.addEventListener('pointerdown', (e) => { if (isInteractiveTarget(e.target)) return; if (e.button !== undefined && e.button !== 0) return; pressStartX = e.clientX; pressStartY = e.clientY; cancelPress(); pressTimer = setTimeout(() => { fileInput.click(); }, LONG_PRESS_MS); });
-        document.addEventListener('pointermove', (e) => { if (!pressTimer) return; const dx = e.clientX - pressStartX; const dy = e.clientY - pressStartY; if (Math.hypot(dx, dy) > MOVE_THRESHOLD) cancelPress(); });
+        
+        document.addEventListener('pointerdown', (e) => { 
+            if (squareIcon.contains(e.target) || dropdown.contains(e.target) || hitboxDropdown.contains(e.target)) return;
+            if (e.button !== undefined && e.button !== 0) return;
+            pressStartX = e.clientX; pressStartY = e.clientY; cancelPress(); 
+            pressTimer = setTimeout(() => { 
+                const choice = confirm("Bạn muốn đặt hình nền là:\n- Nhấn OK để chọn ẢNH\n- Nhấn Cancel để chọn VIDEO");
+                if (choice) {
+                    fileInput.click();
+                } else {
+                    videoInput.click();
+                }
+            }, LONG_PRESS_MS); 
+        });
+
+        document.addEventListener('pointermove', (e) => { if (!pressTimer) return; const dx = e.clientX - pressStartX; const dy = e.clientY - pressStartY; if (Math.hypot(dx, dy) > 10) cancelPress(); });
         document.addEventListener('pointerup', cancelPress); document.addEventListener('pointercancel', cancelPress); document.addEventListener('pointerleave', cancelPress); window.addEventListener('blur', cancelPress);
         document.addEventListener('contextmenu', (e) => { if (e.target.closest('.ctx-menu')) return; e.preventDefault(); });
-        const MAX_IMG_BYTES = 8 * 1024 * 1024;
+
         fileInput.addEventListener('change', (event) => {
           const file = event.target.files && event.target.files[0];
           if (!file || !file.type.startsWith('image/')) { fileInput.value = ''; return; }
-          if (file.size > MAX_IMG_BYTES) { fileInput.value = ''; return; }
           const reader = new FileReader();
-          reader.onload = (e) => { const url = e.target.result; document.body.style.backgroundImage = `url('${url}')`; try { localStorage.setItem(LS_BG, url); } catch (err) {} };
+          reader.onload = (e) => { 
+              const url = e.target.result; 
+              document.body.style.backgroundImage = `url('${url}')`; 
+              bgVideo.style.display = 'none';
+              try { localStorage.setItem(LS_BG_IMG, url); localStorage.removeItem(LS_BG_VID); } catch (err) {} 
+          };
           reader.readAsDataURL(file); fileInput.value = '';
         });
-        (function restoreBackground() { try { const bg = localStorage.getItem(LS_BG); if (bg) document.body.style.backgroundImage = `url('${bg}')`; } catch (e) {} })();
+
+        videoInput.addEventListener('change', (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (!file || !file.type.startsWith('video/')) { videoInput.value = ''; return; }
+          const reader = new FileReader();
+          reader.onload = (e) => { 
+              const url = e.target.result; 
+              bgVideo.src = url;
+              bgVideo.style.display = 'block';
+              document.body.style.backgroundImage = 'none';
+              bgVideo.play();
+              try { localStorage.setItem(LS_BG_VID, url); localStorage.removeItem(LS_BG_IMG); } catch (err) {} 
+          };
+          reader.readAsDataURL(file); videoInput.value = '';
+        });
+
+        (function restoreBackground() { 
+            try { 
+                const bgImg = localStorage.getItem(LS_BG_IMG); 
+                const bgVid = localStorage.getItem(LS_BG_VID);
+                if (bgVid) {
+                    bgVideo.src = bgVid;
+                    bgVideo.style.display = 'block';
+                    bgVideo.play();
+                } else if (bgImg) {
+                    document.body.style.backgroundImage = `url('${bgImg}')`; 
+                }
+            } catch (e) {} 
+        })();
+
         function updateClock() {
           const now = new Date(); const hh = String(now.getHours()).padStart(2, '0'); const mm = String(now.getMinutes()).padStart(2, '0'); const ss = String(now.getSeconds()).padStart(2, '0'); const dd = String(now.getDate()).padStart(2, '0'); const mo = String(now.getMonth() + 1).padStart(2, '0'); const yyyy = now.getFullYear();
           clock.textContent = `${hh}:${mm}:${ss}  ${dd}/${mo}/${yyyy}`;
@@ -302,10 +407,9 @@
         dropdown.addEventListener('click', (e) => e.stopPropagation());
         refresh();
       } catch (error) {
-        // Nếu có lỗi Javascript, in ra màn hình thay vì làm văng app
-        document.body.innerHTML = `<div style="color:red; padding:20px;">Lỗi JavaScript: ${error.message}</div>`;
+        document.body.innerHTML = `<div style="color:red; padding:20px; font-size:20px;">Lỗi JavaScript: ${error.message}</div>`;
       }
     })();
   </script>
 </body>
-</html>
+  </html>
