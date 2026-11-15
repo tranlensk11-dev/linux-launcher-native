@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Quyền hiển thị thanh tác vụ trên các ứng dụng khác -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <!-- Quyền truy vấn danh sách ứng dụng -->
+    <!-- Quyền truy vấn danh sách ứng dụng (để mở app) -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
@@ -11,6 +9,7 @@
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="Linux Launcher"
         android:usesCleartextTraffic="true"
+        android:resizeableActivity="true"
         android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
 
         <!-- Activity chính đóng vai trò Launcher -->
@@ -26,9 +25,5 @@
             </intent-filter>
         </activity>
 
-        <!-- Service vẽ thanh tác vụ nổi -->
-        <service
-            android:name=".OverlayService"
-            android:exported="false" />
     </application>
 </manifest>
