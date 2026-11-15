@@ -5,8 +5,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
-import android.view.WindowManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
@@ -17,51 +15,57 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 1. Ẩn thanh trạng thái (Status Bar) để giao diện HTML tràn viền
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.hide(android.view.WindowInsets.Type.statusBars())
-        } else {
-            @Suppress("DEPRECATION")
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-            )
-        }
-
-        // 2. Khởi tạo WebView
+        // 1. Khởi tạo WebView
         webView = WebView(this)
         setContentView(webView)
         
         webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true // Bật lưu trữ LocalStorage cho HTML
-        webView.webViewClient = WebViewClient()
+        webView.settings.domStorageEnabled = true
+        
+        // Bắt lỗi nếu không tìm thấy file HTML
+        webView.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                // Nếu lỗi, hiển thị chữ trên màn hình thay vì văng app
+                view?.loadData("<html><body style='background:black;color:white;'><h1>Lỗi tải HTML: $description</h1></body></html>", "text/html", "UTF-8")
+            }
+        }
         
         // Load file HTML
         webView.loadUrl("file:///android_asset/index.html")
 
-        // 3. Xin quyền Cửa sổ nổi (Thanh tác vụ)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            startActivityForResult(intent, 100)
-        } else {
-            startOverlayService()
+        // 2. Xin quyền Cửa sổ nổi (Bọc trong try-catch để không bị crash)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivityForResult(intent, 100)
+            } else {
+                startOverlayService()
+            }
+        } catch (e: Exception) {
+            // Bỏ qua lỗi quyền, không làm văng app
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 100) {
-            if (Settings.canDrawOverlays(this)) {
-                startOverlayService()
-            }
+            try {
+                if (Settings.canDrawOverlays(this)) {
+                    startOverlayService()
+                }
+            } catch (e: Exception) {}
         }
     }
 
     private fun startOverlayService() {
-        val serviceIntent = Intent(this, OverlayService::class.java)
-        startService(serviceIntent)
+        try {
+            val serviceIntent = Intent(this, OverlayService::class.java)
+            startService(serviceIntent)
+        } catch (e: Exception) {
+            // Bỏ qua lỗi khởi động Service nổi
+        }
     }
 }
