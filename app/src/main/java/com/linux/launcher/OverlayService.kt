@@ -4,7 +4,9 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
+import android.provider.Settings
 import android.view.Gravity
 import android.view.WindowManager
 import android.widget.LinearLayout
@@ -19,35 +21,48 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        overlayView = LinearLayout(this).apply {
-            setBackgroundColor(Color.parseColor("#33000000"))
-            gravity = Gravity.CENTER_VERTICAL
-            
-            val textView = TextView(this@OverlayService).apply {
-                text = " Linux Taskbar "
-                setTextColor(Color.WHITE)
-                textSize = 16f
-            }
-            addView(textView)
+        // Nếu chưa được cấp quyền hiển thị trên app khác thì dừng lại (chống crash)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            stopSelf()
+            return
         }
 
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            100,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT
-        )
-        params.gravity = Gravity.TOP
+        try {
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            overlayView = LinearLayout(this).apply {
+                setBackgroundColor(Color.parseColor("#33000000"))
+                gravity = Gravity.CENTER_VERTICAL
+                
+                val textView = TextView(this@OverlayService).apply {
+                    text = " Linux Taskbar "
+                    setTextColor(Color.WHITE)
+                    textSize = 16f
+                }
+                addView(textView)
+            }
 
-        windowManager.addView(overlayView, params)
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                100,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+            )
+            params.gravity = Gravity.TOP
+
+            windowManager.addView(overlayView, params)
+        } catch (e: Exception) {
+            // Chống crash nếu hệ thống không cho phép vẽ
+            stopSelf()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (::overlayView.isInitialized) {
-            windowManager.removeView(overlayView)
-        }
+        try {
+            if (::overlayView.isInitialized) {
+                windowManager.removeView(overlayView)
+            }
+        } catch (e: Exception) {}
     }
 }
