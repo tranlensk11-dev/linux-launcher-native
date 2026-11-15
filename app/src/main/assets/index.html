@@ -77,230 +77,235 @@
   <script>
     (function() {
       'use strict';
-      const fileInput      = document.getElementById('fileInput');
-      const clock          = document.getElementById('clock');
-      const squareIcon     = document.getElementById('squareIcon');
-      const dropdown       = document.getElementById('dropdown');
-      const searchInput    = document.getElementById('searchInput');
-      const mainList       = document.getElementById('mainList');
-      const subList        = document.getElementById('subList');
-      const addMainBtn     = document.getElementById('addMainBtn');
-      const addSubBtn      = document.getElementById('addSubBtn');
-      const LS_SECTIONS = 'linuxweb_sections_v2';
-      const LS_ACTIVE   = 'linuxweb_activeIndex_v2';
-      const LS_BG       = 'linuxweb_background';
-      let sections = loadSections();
-      let activeIndex = loadActive();
-      let searchTerm = '';
-      function normalizeApps(arr) {
-        arr.forEach((sec) => {
-          if (!Array.isArray(sec.apps)) sec.apps = [];
-          sec.apps = sec.apps.map((a) => {
-            if (typeof a === 'string') return { name: a, target: '' };
-            if (a && typeof a === 'object') { return { name: String(a.name || ''), target: String(a.target || '') }; }
-            return { name: '', target: '' };
-          }).filter((a) => a.name);
-        });
-        return arr;
-      }
-      function loadSections() {
-        try {
-          const raw = localStorage.getItem(LS_SECTIONS);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length) return normalizeApps(parsed);
-          }
-        } catch (e) {}
-        return [];
-      }
-      function loadActive() {
-        const v = parseInt(localStorage.getItem(LS_ACTIVE), 10);
-        return (isNaN(v) || v < 0 || v >= sections.length) ? 0 : v;
-      }
-      function saveSections() { try { localStorage.setItem(LS_SECTIONS, JSON.stringify(sections)); } catch (e) {} }
-      function saveActive() { try { localStorage.setItem(LS_ACTIVE, String(activeIndex)); } catch (e) {} }
-      let ctxMenuEl = null;
-      let renamingEl = null;
-      function closeCtxMenu() { if (ctxMenuEl) { ctxMenuEl.remove(); ctxMenuEl = null; } }
-      function cancelRename() {
-        if (!renamingEl) return;
-        const { nameEl, targetEl, originalText, originalTarget, mode } = renamingEl;
-        renamingEl = null;
-        if (!nameEl || !nameEl.parentNode) return;
-        if (mode === 'target') { nameEl.textContent = originalTarget; if (!originalTarget && targetEl && targetEl.parentNode) targetEl.remove(); } else { nameEl.textContent = originalText; }
-      }
-      function startInlineRename(el, currentName, onCommit) {
-        cancelRename(); closeCtxMenu();
-        let nameEl = el;
-        if (el.classList.contains('sub-item')) { nameEl = el.querySelector('.sub-item-name') || el; }
-        const originalText = nameEl.textContent; nameEl.textContent = '';
-        const input = document.createElement('input'); input.type = 'text'; input.className = 'rename-input'; input.value = currentName; input.maxLength = 60;
-        nameEl.appendChild(input);
-        renamingEl = { el, nameEl, targetEl: null, originalText, originalTarget: '', mode: 'name' };
-        input.focus(); input.select();
-        let done = false;
-        const commit = () => { if (done) return; done = true; const val = input.value.trim(); renamingEl = null; if (val && val !== currentName) { onCommit(val); } else { nameEl.textContent = originalText; } };
-        const cancel = () => { if (done) return; done = true; renamingEl = null; nameEl.textContent = originalText; };
-        input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
-        input.addEventListener('blur', commit); input.addEventListener('click', (e) => e.stopPropagation()); input.addEventListener('pointerdown', (e) => e.stopPropagation());
-      }
-      function startInlineTargetEdit(el, currentTarget, onCommit) {
-        cancelRename(); closeCtxMenu();
-        if (!el.classList.contains('sub-item')) return;
-        let targetEl = el.querySelector('.sub-item-target');
-        if (!targetEl) { targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; el.appendChild(targetEl); }
-        const originalTarget = targetEl.textContent; targetEl.textContent = '';
-        const input = document.createElement('input'); input.type = 'text'; input.className = 'rename-input rename-target-input'; input.value = currentTarget; input.maxLength = 300; input.placeholder = 'com.example.app hoặc https://...';
-        targetEl.appendChild(input);
-        renamingEl = { el, nameEl: targetEl, targetEl, originalText: originalTarget, originalTarget, mode: 'target' };
-        input.focus(); input.select();
-        let done = false;
-        const commit = () => { if (done) return; done = true; const val = input.value.trim(); renamingEl = null; if (val !== currentTarget) { onCommit(val); } else { if (originalTarget) targetEl.textContent = originalTarget; else targetEl.remove(); } };
-        const cancel = () => { if (done) return; done = true; renamingEl = null; if (originalTarget) targetEl.textContent = originalTarget; else targetEl.remove(); };
-        input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
-        input.addEventListener('blur', commit); input.addEventListener('click', (e) => e.stopPropagation()); input.addEventListener('pointerdown', (e) => e.stopPropagation());
-      }
-      function showCtxMenu(x, y, items) {
-        closeCtxMenu();
-        const menu = document.createElement('div'); menu.className = 'ctx-menu';
-        items.forEach((it) => {
-          const row = document.createElement('div'); row.className = 'ctx-item' + (it.danger ? ' danger' : ''); row.textContent = it.label;
-          row.addEventListener('click', (e) => { e.stopPropagation(); closeCtxMenu(); it.action(); });
-          menu.appendChild(row);
-        });
-        document.body.appendChild(menu); ctxMenuEl = menu;
-        const r = menu.getBoundingClientRect();
-        let left = x, top = y;
-        if (left + r.width > window.innerWidth) left = window.innerWidth - r.width - 4;
-        if (top + r.height > window.innerHeight) top = window.innerHeight - r.height - 4;
-        if (left < 0) left = 0; if (top < 0) top = 0;
-        menu.style.left = left + 'px'; menu.style.top = top + 'px';
-      }
-      document.addEventListener('click', closeCtxMenu); document.addEventListener('scroll', closeCtxMenu, true); window.addEventListener('resize', closeCtxMenu);
-      function renderMain() {
-        mainList.innerHTML = '';
-        const filtered = sections.map((s, i) => ({ s, i })).filter(({ s }) => !searchTerm || s.name.toLowerCase().includes(searchTerm));
-        if (filtered.length === 0) { const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = searchTerm ? 'Không có kết quả' : 'Chưa có mục'; mainList.appendChild(empty); return; }
-        filtered.forEach(({ s, i }) => {
-          const div = document.createElement('div');
-          div.className = 'dropdown-item' + (i === activeIndex ? ' active' : ''); div.textContent = s.name; div.dataset.index = i;
-          div.setAttribute('role', 'option'); div.setAttribute('tabindex', '0'); div.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
-          div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openSectionCtxMenu(e.clientX, e.clientY, i, div); });
-          attachLongPress(div, (x, y) => openSectionCtxMenu(x, y, i, div));
-          mainList.appendChild(div);
-        });
-      }
-      function renderSub() {
-        subList.innerHTML = '';
-        if (activeIndex < 0 || !sections[activeIndex]) {
-          addSubBtn.style.display = 'none';
-          const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = 'Chọn một mục'; subList.appendChild(empty); return;
+      
+      // Bọc toàn bộ trong try-catch để chống văng app nếu có lỗi JS
+      try {
+        const fileInput      = document.getElementById('fileInput');
+        const clock          = document.getElementById('clock');
+        const squareIcon     = document.getElementById('squareIcon');
+        const dropdown       = document.getElementById('dropdown');
+        const searchInput    = document.getElementById('searchInput');
+        const mainList       = document.getElementById('mainList');
+        const subList        = document.getElementById('subList');
+        const addMainBtn     = document.getElementById('addMainBtn');
+        const addSubBtn      = document.getElementById('addSubBtn');
+        const LS_SECTIONS = 'linuxweb_sections_v2';
+        const LS_ACTIVE   = 'linuxweb_activeIndex_v2';
+        const LS_BG       = 'linuxweb_background';
+        let sections = loadSections();
+        let activeIndex = loadActive();
+        let searchTerm = '';
+        function normalizeApps(arr) {
+          arr.forEach((sec) => {
+            if (!Array.isArray(sec.apps)) sec.apps = [];
+            sec.apps = sec.apps.map((a) => {
+              if (typeof a === 'string') return { name: a, target: '' };
+              if (a && typeof a === 'object') { return { name: String(a.name || ''), target: String(a.target || '') }; }
+              return { name: '', target: '' };
+            }).filter((a) => a.name);
+          });
+          return arr;
         }
-        const section = sections[activeIndex]; const apps = section.apps || [];
-        if (apps.length === 0) { const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = 'Chưa có app nào'; subList.appendChild(empty); } 
-        else {
-          apps.forEach((appObj, appIdx) => {
-            const div = document.createElement('div'); div.className = 'sub-item'; div.setAttribute('role', 'option'); div.setAttribute('tabindex', '0');
-            const nameEl = document.createElement('div'); nameEl.className = 'sub-item-name'; nameEl.textContent = appObj.name; div.appendChild(nameEl);
-            if (appObj.target) { const targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; targetEl.textContent = appObj.target; div.appendChild(targetEl); }
-            div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openAppCtxMenu(e.clientX, e.clientY, activeIndex, appIdx, div, appObj); });
-            attachLongPress(div, (x, y) => openAppCtxMenu(x, y, activeIndex, appIdx, div, appObj));
-            
-            // ==========================================
-            // THÊM SỰ KIỆN CLICK ĐỂ MỞ APP Ở CHẾ ĐỘ TỰ DO
-            // ==========================================
-            div.addEventListener('click', () => {
-                if (appObj.target && window.AndroidApp) {
-                    window.AndroidApp.openApp(appObj.target);
-                    dropdown.classList.remove('show');
-                }
-            });
-            
-            subList.appendChild(div);
+        function loadSections() {
+          try {
+            const raw = localStorage.getItem(LS_SECTIONS);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length) return normalizeApps(parsed);
+            }
+          } catch (e) {}
+          return [];
+        }
+        function loadActive() {
+          const v = parseInt(localStorage.getItem(LS_ACTIVE), 10);
+          return (isNaN(v) || v < 0 || v >= sections.length) ? 0 : v;
+        }
+        function saveSections() { try { localStorage.setItem(LS_SECTIONS, JSON.stringify(sections)); } catch (e) {} }
+        function saveActive() { try { localStorage.setItem(LS_ACTIVE, String(activeIndex)); } catch (e) {} }
+        let ctxMenuEl = null;
+        let renamingEl = null;
+        function closeCtxMenu() { if (ctxMenuEl) { ctxMenuEl.remove(); ctxMenuEl = null; } }
+        function cancelRename() {
+          if (!renamingEl) return;
+          const { nameEl, targetEl, originalText, originalTarget, mode } = renamingEl;
+          renamingEl = null;
+          if (!nameEl || !nameEl.parentNode) return;
+          if (mode === 'target') { nameEl.textContent = originalTarget; if (!originalTarget && targetEl && targetEl.parentNode) targetEl.remove(); } else { nameEl.textContent = originalText; }
+        }
+        function startInlineRename(el, currentName, onCommit) {
+          cancelRename(); closeCtxMenu();
+          let nameEl = el;
+          if (el.classList.contains('sub-item')) { nameEl = el.querySelector('.sub-item-name') || el; }
+          const originalText = nameEl.textContent; nameEl.textContent = '';
+          const input = document.createElement('input'); input.type = 'text'; input.className = 'rename-input'; input.value = currentName; input.maxLength = 60;
+          nameEl.appendChild(input);
+          renamingEl = { el, nameEl, targetEl: null, originalText, originalTarget: '', mode: 'name' };
+          input.focus(); input.select();
+          let done = false;
+          const commit = () => { if (done) return; done = true; const val = input.value.trim(); renamingEl = null; if (val && val !== currentName) { onCommit(val); } else { nameEl.textContent = originalText; } };
+          const cancel = () => { if (done) return; done = true; renamingEl = null; nameEl.textContent = originalText; };
+          input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
+          input.addEventListener('blur', commit); input.addEventListener('click', (e) => e.stopPropagation()); input.addEventListener('pointerdown', (e) => e.stopPropagation());
+        }
+        function startInlineTargetEdit(el, currentTarget, onCommit) {
+          cancelRename(); closeCtxMenu();
+          if (!el.classList.contains('sub-item')) return;
+          let targetEl = el.querySelector('.sub-item-target');
+          if (!targetEl) { targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; el.appendChild(targetEl); }
+          const originalTarget = targetEl.textContent; targetEl.textContent = '';
+          const input = document.createElement('input'); input.type = 'text'; input.className = 'rename-input rename-target-input'; input.value = currentTarget; input.maxLength = 300; input.placeholder = 'com.example.app hoặc https://...';
+          targetEl.appendChild(input);
+          renamingEl = { el, nameEl: targetEl, targetEl, originalText: originalTarget, originalTarget, mode: 'target' };
+          input.focus(); input.select();
+          let done = false;
+          const commit = () => { if (done) return; done = true; const val = input.value.trim(); renamingEl = null; if (val !== currentTarget) { onCommit(val); } else { if (originalTarget) targetEl.textContent = originalTarget; else targetEl.remove(); } };
+          const cancel = () => { if (done) return; done = true; renamingEl = null; if (originalTarget) targetEl.textContent = originalTarget; else targetEl.remove(); };
+          input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
+          input.addEventListener('blur', commit); input.addEventListener('click', (e) => e.stopPropagation()); input.addEventListener('pointerdown', (e) => e.stopPropagation());
+        }
+        function showCtxMenu(x, y, items) {
+          closeCtxMenu();
+          const menu = document.createElement('div'); menu.className = 'ctx-menu';
+          items.forEach((it) => {
+            const row = document.createElement('div'); row.className = 'ctx-item' + (it.danger ? ' danger' : ''); row.textContent = it.label;
+            row.addEventListener('click', (e) => { e.stopPropagation(); closeCtxMenu(); it.action(); });
+            menu.appendChild(row);
+          });
+          document.body.appendChild(menu); ctxMenuEl = menu;
+          const r = menu.getBoundingClientRect();
+          let left = x, top = y;
+          if (left + r.width > window.innerWidth) left = window.innerWidth - r.width - 4;
+          if (top + r.height > window.innerHeight) top = window.innerHeight - r.height - 4;
+          if (left < 0) left = 0; if (top < 0) top = 0;
+          menu.style.left = left + 'px'; menu.style.top = top + 'px';
+        }
+        document.addEventListener('click', closeCtxMenu); document.addEventListener('scroll', closeCtxMenu, true); window.addEventListener('resize', closeCtxMenu);
+        function renderMain() {
+          mainList.innerHTML = '';
+          const filtered = sections.map((s, i) => ({ s, i })).filter(({ s }) => !searchTerm || s.name.toLowerCase().includes(searchTerm));
+          if (filtered.length === 0) { const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = searchTerm ? 'Không có kết quả' : 'Chưa có mục'; mainList.appendChild(empty); return; }
+          filtered.forEach(({ s, i }) => {
+            const div = document.createElement('div');
+            div.className = 'dropdown-item' + (i === activeIndex ? ' active' : ''); div.textContent = s.name; div.dataset.index = i;
+            div.setAttribute('role', 'option'); div.setAttribute('tabindex', '0'); div.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
+            div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openSectionCtxMenu(e.clientX, e.clientY, i, div); });
+            attachLongPress(div, (x, y) => openSectionCtxMenu(x, y, i, div));
+            mainList.appendChild(div);
           });
         }
-        addSubBtn.style.display = 'block';
-      }
-      function openSectionCtxMenu(x, y, sectionIdx, el) {
-        const section = sections[sectionIdx]; if (!section) return; const items = [];
-        items.push({ label: 'Đổi tên', action: () => { startInlineRename(el, section.name, (newName) => { section.name = newName; refresh(); }); } });
-        items.push({ label: 'Xóa', danger: true, action: () => { sections.splice(sectionIdx, 1); if (activeIndex >= sections.length) activeIndex = sections.length - 1; if (activeIndex < 0) activeIndex = 0; refresh(); } });
-        showCtxMenu(x, y, items);
-      }
-      function openAppCtxMenu(x, y, sectionIdx, appIdx, el, appObj) {
-        const section = sections[sectionIdx]; if (!section) return; const items = [];
-        items.push({ label: 'Đổi tên', action: () => { startInlineRename(el, appObj.name, (newName) => { section.apps[appIdx].name = newName; refresh(); }); } });
-        items.push({ label: 'Đổi đường dẫn', action: () => { startInlineTargetEdit(el, appObj.target || '', (newTarget) => { section.apps[appIdx].target = newTarget; refresh(); }); } });
-        items.push({ label: 'Xóa', danger: true, action: () => { section.apps.splice(appIdx, 1); refresh(); } });
-        showCtxMenu(x, y, items);
-      }
-      function attachLongPress(el, callback) {
-        let timer = null; let startX = 0, startY = 0; let fired = false;
-        const cancel = () => { clearTimeout(timer); timer = null; };
-        el.addEventListener('pointerdown', (e) => { if (e.button !== undefined && e.button !== 0) return; fired = false; startX = e.clientX; startY = e.clientY; cancel(); timer = setTimeout(() => { fired = true; callback(e.clientX, e.clientY); }, 500); });
-        el.addEventListener('pointermove', (e) => { if (!timer) return; if (Math.hypot(e.clientX - startX, e.clientY - startY) > 10) cancel(); });
-        el.addEventListener('pointerup', () => cancel()); el.addEventListener('pointercancel', () => cancel()); el.addEventListener('pointerleave', () => cancel());
-        el.addEventListener('click', (e) => { if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
-      }
-      function refresh() { renderMain(); renderSub(); saveSections(); saveActive(); }
-      addMainBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); cancelRename(); closeCtxMenu();
-        let n = 1; const existing = new Set(sections.map(s => s.name));
-        while (existing.has('New folder ' + n)) n++;
-        sections.push({ name: 'New folder ' + n, apps: [] });
-        if (activeIndex < 0) activeIndex = sections.length - 1;
+        function renderSub() {
+          subList.innerHTML = '';
+          if (activeIndex < 0 || !sections[activeIndex]) {
+            addSubBtn.style.display = 'none';
+            const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = 'Chọn một mục'; subList.appendChild(empty); return;
+          }
+          const section = sections[activeIndex]; const apps = section.apps || [];
+          if (apps.length === 0) { const empty = document.createElement('div'); empty.className = 'empty-text'; empty.textContent = 'Chưa có app nào'; subList.appendChild(empty); } 
+          else {
+            apps.forEach((appObj, appIdx) => {
+              const div = document.createElement('div'); div.className = 'sub-item'; div.setAttribute('role', 'option'); div.setAttribute('tabindex', '0');
+              const nameEl = document.createElement('div'); nameEl.className = 'sub-item-name'; nameEl.textContent = appObj.name; div.appendChild(nameEl);
+              if (appObj.target) { const targetEl = document.createElement('div'); targetEl.className = 'sub-item-target'; targetEl.textContent = appObj.target; div.appendChild(targetEl); }
+              div.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); openAppCtxMenu(e.clientX, e.clientY, activeIndex, appIdx, div, appObj); });
+              attachLongPress(div, (x, y) => openAppCtxMenu(x, y, activeIndex, appIdx, div, appObj));
+              
+              // Sự kiện click mở App
+              div.addEventListener('click', () => {
+                  if (appObj.target && window.AndroidApp) {
+                      window.AndroidApp.openApp(appObj.target);
+                      dropdown.classList.remove('show');
+                  }
+              });
+              
+              subList.appendChild(div);
+            });
+          }
+          addSubBtn.style.display = 'block';
+        }
+        function openSectionCtxMenu(x, y, sectionIdx, el) {
+          const section = sections[sectionIdx]; if (!section) return; const items = [];
+          items.push({ label: 'Đổi tên', action: () => { startInlineRename(el, section.name, (newName) => { section.name = newName; refresh(); }); } });
+          items.push({ label: 'Xóa', danger: true, action: () => { sections.splice(sectionIdx, 1); if (activeIndex >= sections.length) activeIndex = sections.length - 1; if (activeIndex < 0) activeIndex = 0; refresh(); } });
+          showCtxMenu(x, y, items);
+        }
+        function openAppCtxMenu(x, y, sectionIdx, appIdx, el, appObj) {
+          const section = sections[sectionIdx]; if (!section) return; const items = [];
+          items.push({ label: 'Đổi tên', action: () => { startInlineRename(el, appObj.name, (newName) => { section.apps[appIdx].name = newName; refresh(); }); } });
+          items.push({ label: 'Đổi đường dẫn', action: () => { startInlineTargetEdit(el, appObj.target || '', (newTarget) => { section.apps[appIdx].target = newTarget; refresh(); }); } });
+          items.push({ label: 'Xóa', danger: true, action: () => { section.apps.splice(appIdx, 1); refresh(); } });
+          showCtxMenu(x, y, items);
+        }
+        function attachLongPress(el, callback) {
+          let timer = null; let startX = 0, startY = 0; let fired = false;
+          const cancel = () => { clearTimeout(timer); timer = null; };
+          el.addEventListener('pointerdown', (e) => { if (e.button !== undefined && e.button !== 0) return; fired = false; startX = e.clientX; startY = e.clientY; cancel(); timer = setTimeout(() => { fired = true; callback(e.clientX, e.clientY); }, 500); });
+          el.addEventListener('pointermove', (e) => { if (!timer) return; if (Math.hypot(e.clientX - startX, e.clientY - startY) > 10) cancel(); });
+          el.addEventListener('pointerup', () => cancel()); el.addEventListener('pointercancel', () => cancel()); el.addEventListener('pointerleave', () => cancel());
+          el.addEventListener('click', (e) => { if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
+        }
+        function refresh() { renderMain(); renderSub(); saveSections(); saveActive(); }
+        addMainBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); cancelRename(); closeCtxMenu();
+          let n = 1; const existing = new Set(sections.map(s => s.name));
+          while (existing.has('New folder ' + n)) n++;
+          sections.push({ name: 'New folder ' + n, apps: [] });
+          if (activeIndex < 0) activeIndex = sections.length - 1;
+          refresh();
+        });
+        addSubBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); cancelRename(); closeCtxMenu();
+          if (activeIndex < 0 || !sections[activeIndex]) return;
+          const arr = sections[activeIndex].apps;
+          let n = 1; const existing = new Set(arr.map(a => a.name));
+          while (existing.has('App ' + n)) n++;
+          arr.push({ name: 'App ' + n, target: '' });
+          refresh();
+        });
+        mainList.addEventListener('click', (e) => {
+          e.stopPropagation(); if (renamingEl) return;
+          const item = e.target.closest('.dropdown-item'); if (!item) return;
+          activeIndex = Number(item.dataset.index);
+          searchTerm = ''; searchInput.value = ''; refresh();
+        });
+        mainList.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { const item = e.target.closest('.dropdown-item'); if (item && !renamingEl) { e.preventDefault(); item.click(); } }
+        });
+        searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.trim().toLowerCase(); renderMain(); });
+        function toggleDropdown() { dropdown.classList.toggle('show'); }
+        squareIcon.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
+        squareIcon.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } });
+        document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && !squareIcon.contains(e.target)) { dropdown.classList.remove('show'); } });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { dropdown.classList.remove('show'); closeCtxMenu(); cancelRename(); } });
+        const LONG_PRESS_MS = 500; const MOVE_THRESHOLD = 10;
+        let pressTimer = null; let pressStartX = 0, pressStartY = 0;
+        function isInteractiveTarget(el) { if (!el) return false; return (squareIcon.contains(el) || dropdown.contains(el) || el === fileInput || el.closest('.top-bar') || el.closest('.clock') || el.closest('.ctx-menu')); }
+        function cancelPress() { clearTimeout(pressTimer); pressTimer = null; }
+        document.addEventListener('pointerdown', (e) => { if (isInteractiveTarget(e.target)) return; if (e.button !== undefined && e.button !== 0) return; pressStartX = e.clientX; pressStartY = e.clientY; cancelPress(); pressTimer = setTimeout(() => { fileInput.click(); }, LONG_PRESS_MS); });
+        document.addEventListener('pointermove', (e) => { if (!pressTimer) return; const dx = e.clientX - pressStartX; const dy = e.clientY - pressStartY; if (Math.hypot(dx, dy) > MOVE_THRESHOLD) cancelPress(); });
+        document.addEventListener('pointerup', cancelPress); document.addEventListener('pointercancel', cancelPress); document.addEventListener('pointerleave', cancelPress); window.addEventListener('blur', cancelPress);
+        document.addEventListener('contextmenu', (e) => { if (e.target.closest('.ctx-menu')) return; e.preventDefault(); });
+        const MAX_IMG_BYTES = 8 * 1024 * 1024;
+        fileInput.addEventListener('change', (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (!file || !file.type.startsWith('image/')) { fileInput.value = ''; return; }
+          if (file.size > MAX_IMG_BYTES) { fileInput.value = ''; return; }
+          const reader = new FileReader();
+          reader.onload = (e) => { const url = e.target.result; document.body.style.backgroundImage = `url('${url}')`; try { localStorage.setItem(LS_BG, url); } catch (err) {} };
+          reader.readAsDataURL(file); fileInput.value = '';
+        });
+        (function restoreBackground() { try { const bg = localStorage.getItem(LS_BG); if (bg) document.body.style.backgroundImage = `url('${bg}')`; } catch (e) {} })();
+        function updateClock() {
+          const now = new Date(); const hh = String(now.getHours()).padStart(2, '0'); const mm = String(now.getMinutes()).padStart(2, '0'); const ss = String(now.getSeconds()).padStart(2, '0'); const dd = String(now.getDate()).padStart(2, '0'); const mo = String(now.getMonth() + 1).padStart(2, '0'); const yyyy = now.getFullYear();
+          clock.textContent = `${hh}:${mm}:${ss}  ${dd}/${mo}/${yyyy}`;
+        }
+        updateClock(); setInterval(updateClock, 1000);
+        dropdown.addEventListener('click', (e) => e.stopPropagation());
         refresh();
-      });
-      addSubBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); cancelRename(); closeCtxMenu();
-        if (activeIndex < 0 || !sections[activeIndex]) return;
-        const arr = sections[activeIndex].apps;
-        let n = 1; const existing = new Set(arr.map(a => a.name));
-        while (existing.has('App ' + n)) n++;
-        arr.push({ name: 'App ' + n, target: '' });
-        refresh();
-      });
-      mainList.addEventListener('click', (e) => {
-        e.stopPropagation(); if (renamingEl) return;
-        const item = e.target.closest('.dropdown-item'); if (!item) return;
-        activeIndex = Number(item.dataset.index);
-        searchTerm = ''; searchInput.value = ''; refresh();
-      });
-      mainList.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { const item = e.target.closest('.dropdown-item'); if (item && !renamingEl) { e.preventDefault(); item.click(); } }
-      });
-      searchInput.addEventListener('input', (e) => { searchTerm = e.target.value.trim().toLowerCase(); renderMain(); });
-      function toggleDropdown() { dropdown.classList.toggle('show'); }
-      squareIcon.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
-      squareIcon.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } });
-      document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && !squareIcon.contains(e.target)) { dropdown.classList.remove('show'); } });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { dropdown.classList.remove('show'); closeCtxMenu(); cancelRename(); } });
-      const LONG_PRESS_MS = 500; const MOVE_THRESHOLD = 10;
-      let pressTimer = null; let pressStartX = 0, pressStartY = 0;
-      function isInteractiveTarget(el) { if (!el) return false; return (squareIcon.contains(el) || dropdown.contains(el) || el === fileInput || el.closest('.top-bar') || el.closest('.clock') || el.closest('.ctx-menu')); }
-      function cancelPress() { clearTimeout(pressTimer); pressTimer = null; }
-      document.addEventListener('pointerdown', (e) => { if (isInteractiveTarget(e.target)) return; if (e.button !== undefined && e.button !== 0) return; pressStartX = e.clientX; pressStartY = e.clientY; cancelPress(); pressTimer = setTimeout(() => { fileInput.click(); }, LONG_PRESS_MS); });
-      document.addEventListener('pointermove', (e) => { if (!pressTimer) return; const dx = e.clientX - pressStartX; const dy = e.clientY - pressStartY; if (Math.hypot(dx, dy) > MOVE_THRESHOLD) cancelPress(); });
-      document.addEventListener('pointerup', cancelPress); document.addEventListener('pointercancel', cancelPress); document.addEventListener('pointerleave', cancelPress); window.addEventListener('blur', cancelPress);
-      document.addEventListener('contextmenu', (e) => { if (e.target.closest('.ctx-menu')) return; e.preventDefault(); });
-      const MAX_IMG_BYTES = 8 * 1024 * 1024;
-      fileInput.addEventListener('change', (event) => {
-        const file = event.target.files && event.target.files[0];
-        if (!file || !file.type.startsWith('image/')) { fileInput.value = ''; return; }
-        if (file.size > MAX_IMG_BYTES) { fileInput.value = ''; return; }
-        const reader = new FileReader();
-        reader.onload = (e) => { const url = e.target.result; document.body.style.backgroundImage = `url('${url}')`; try { localStorage.setItem(LS_BG, url); } catch (err) {} };
-        reader.readAsDataURL(file); fileInput.value = '';
-      });
-      (function restoreBackground() { try { const bg = localStorage.getItem(LS_BG); if (bg) document.body.style.backgroundImage = `url('${bg}')`; } catch (e) {} })();
-      function updateClock() {
-        const now = new Date(); const hh = String(now.getHours()).padStart(2, '0'); const mm = String(now.getMinutes()).padStart(2, '0'); const ss = String(now.getSeconds()).padStart(2, '0'); const dd = String(now.getDate()).padStart(2, '0'); const mo = String(now.getMonth() + 1).padStart(2, '0'); const yyyy = now.getFullYear();
-        clock.textContent = `${hh}:${mm}:${ss}  ${dd}/${mo}/${yyyy}`;
+      } catch (error) {
+        // Nếu có lỗi Javascript, in ra màn hình thay vì làm văng app
+        document.body.innerHTML = `<div style="color:red; padding:20px;">Lỗi JavaScript: ${error.message}</div>`;
       }
-      updateClock(); setInterval(updateClock, 1000);
-      dropdown.addEventListener('click', (e) => e.stopPropagation());
-      refresh();
     })();
   </script>
 </body>
-  </html>
+</html>
