@@ -1,16 +1,14 @@
-package com.linux.launcher
+ package com.linux.launcher
 
 import android.annotation.SuppressLint
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
+import android.app.Activity
 import android.os.Bundle
-import android.provider.Settings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
+
     private lateinit var webView: WebView
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -26,40 +24,16 @@ class MainActivity : AppCompatActivity() {
             webView.settings.allowFileAccess = true
             webView.settings.allowContentAccess = true
             
-            // Bắt lỗi nếu HTML không tải được (thay vì văng app)
-            webView.webViewClient = object : WebViewClient() {
-                override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
-                    view?.loadData("<html><body style='background:black;color:red;'><h2>Lỗi tải HTML: $description</h2></body></html>", "text/html", "UTF-8")
-                }
-            }
+            webView.webViewClient = WebViewClient()
             
+            // Load file HTML
             webView.loadUrl("file:///android_asset/index.html")
+            
+            Toast.makeText(this, "App đã khởi động!", Toast.LENGTH_SHORT).show()
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                startActivityForResult(intent, 100)
-            } else {
-                startOverlayService()
-            }
         } catch (e: Exception) {
-            // Nếu có lỗi chí mạng, ghi log ra thay vì văng app
-            e.printStackTrace()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 100 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-            startOverlayService()
-        }
-    }
-
-    private fun startOverlayService() {
-        try {
-            val serviceIntent = Intent(this, OverlayService::class.java)
-            startService(serviceIntent)
-        } catch (e: Exception) {
-            e.printStackTrace()
+            // HIỆN LỖI LÊN MÀN HÌNH THAY VÌ VĂNG
+            webView.loadData("<html><body style='background:red;color:white;'><h2>Lỗi: ${e.message}</h2></body></html>", "text/html", "UTF-8")
         }
     }
 }
