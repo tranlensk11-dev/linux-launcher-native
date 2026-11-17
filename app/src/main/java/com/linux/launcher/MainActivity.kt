@@ -93,6 +93,9 @@ class MainActivity : Activity() {
                 }
             }, "AndroidApp")
 
+            // Terminal / File Manager / Editor thật (shell Android)
+            webView.addJavascriptInterface(ShellBridge(webView, filesDir), "Shell")
+
             webView.webViewClient = WebViewClient()
             webView.loadUrl("file:///android_asset/index.html")
 
