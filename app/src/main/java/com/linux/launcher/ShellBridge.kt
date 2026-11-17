@@ -1,4 +1,3 @@
-
 package com.linux.launcher
 
 import android.os.Environment
@@ -23,7 +22,6 @@ class ShellBridge(
 ) {
 
     private val procs = ConcurrentHashMap<String, Process>()
-    private val ctx = webView.context
 
     // ---------- DIRECTORY ----------
 
@@ -51,10 +49,8 @@ class ShellBridge(
             }
 
             val pb = ProcessBuilder(command)
-
             pb.directory(filesDir)
             pb.redirectErrorStream(true)
-
             pb.environment()["HOME"] = filesDir.absolutePath
             pb.environment()["TERM"] = "dumb"
 
@@ -68,7 +64,6 @@ class ShellBridge(
 
                     while (true) {
                         val count = input.read(buffer)
-
                         if (count < 0) break
 
                         val encoded = Base64.encodeToString(
@@ -77,7 +72,6 @@ class ShellBridge(
                             count,
                             Base64.NO_WRAP
                         )
-
                         val safeId = JSONObject.quote(id)
 
                         webView.post {
@@ -88,6 +82,7 @@ class ShellBridge(
                         }
                     }
                 } catch (_: Exception) {
+                    // Tiến trình có thể bị đóng trong lúc đang đọc output.
                 }
 
                 val exitCode = try {
@@ -106,23 +101,27 @@ class ShellBridge(
                         )
                     }
                 }
-            }.start()
+            }.apply {
+                name = "ShellBridge-$id"
+                isDaemon = true
+                start()
+            }
 
             "ok"
-
         } catch (e: Exception) {
-            "Lỗi: ${e.message}"
+            "Lỗi: ${e.message ?: "Không thể khởi động terminal"}"
         }
     }
 
     @JavascriptInterface
     fun termWrite(id: String, text: String) {
         try {
-            procs[id]?.outputStream?.let {
-                it.write(text.toByteArray())
-                it.flush()
+            procs[id]?.outputStream?.let { output ->
+                output.write(text.toByteArray(Charsets.UTF_8))
+                output.flush()
             }
         } catch (_: Exception) {
+            // Bỏ qua nếu terminal đã đóng.
         }
     }
 
@@ -131,6 +130,7 @@ class ShellBridge(
         try {
             procs.remove(id)?.destroy()
         } catch (_: Exception) {
+            // Bỏ qua nếu tiến trình đã kết thúc.
         }
     }
 
@@ -156,15 +156,11 @@ class ShellBridge(
                     JSONObject()
                         .put("n", file.name)
                         .put("d", file.isDirectory)
-                        .put(
-                            "s",
-                            if (file.isDirectory) 0 else file.length()
-                        )
+                        .put("s", if (file.isDirectory) 0 else file.length())
                 )
             }
 
             output.toString()
-
         } catch (_: Exception) {
             ""
         }
@@ -183,8 +179,7 @@ class ShellBridge(
                 return "(Tệp quá lớn để mở trong editor)"
             }
 
-            file.readText()
-
+            file.readText(Charsets.UTF_8)
         } catch (_: Exception) {
             ""
         }
@@ -193,7 +188,7 @@ class ShellBridge(
     @JavascriptInterface
     fun fsWrite(path: String, text: String): Boolean {
         return try {
-            File(path).writeText(text)
+            File(path).writeText(text, Charsets.UTF_8)
             true
         } catch (_: Exception) {
             false
