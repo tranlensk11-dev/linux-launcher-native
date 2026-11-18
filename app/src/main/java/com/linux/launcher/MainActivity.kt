@@ -1,4 +1,3 @@
-
 package com.linux.launcher
 
 import android.annotation.SuppressLint
@@ -18,297 +17,107 @@ import android.webkit.WebViewClient
 class MainActivity : Activity() {
 
     private lateinit var webView: WebView
-
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    private val FILE_CHOOSER_RESULT_CODE = 10000
 
-    companion object {
-        private const val FILE_CHOOSER_RESULT_CODE = 10000
-    }
-
-    @SuppressLint(
-        "SetJavaScriptEnabled",
-        "AllowFileAccess",
-        "AllowFileAccessFromFileURLs",
-        "AllowUniversalAccessFromFileURLs"
-    )
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        
         try {
-            // ---------- FULL SCREEN ----------
-
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-            )
-
-            // ---------- WEBVIEW ----------
+            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
             webView = WebView(this)
-
             setContentView(webView)
-
-            webView.settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-
-                allowFileAccess = true
-                allowContentAccess = true
-
-                allowFileAccessFromFileURLs = true
-                allowUniversalAccessFromFileURLs = true
-
-                mediaPlaybackRequiresUserGesture = false
-
-                javaScriptCanOpenWindowsAutomatically = true
-                setSupportMultipleWindows(true)
-            }
-
-            // ---------- FILE CHOOSER ----------
-
+            
+            webView.settings.javaScriptEnabled = true
+            webView.settings.domStorageEnabled = true
+            
+            // QUAN TRỌNG: Cấp quyền đọc file local (để hiện ảnh logo và video)
+            webView.settings.allowFileAccess = true
+            webView.settings.allowContentAccess = true
+            webView.settings.allowFileAccessFromFileURLs = true
+            webView.settings.allowUniversalAccessFromFileURLs = true
+            webView.settings.mediaPlaybackRequiresUserGesture = false // Cho phép video tự phát
+            
+            // Cấu hình chọn ảnh/video
             webView.webChromeClient = object : WebChromeClient() {
-
                 override fun onShowFileChooser(
                     webView: WebView?,
-                    callback: ValueCallback<Array<Uri>>?,
-                    params: FileChooserParams?
+                    filePathCallback: ValueCallback<Array<Uri>>?,
+                    fileChooserParams: FileChooserParams?
                 ): Boolean {
-
-                    // Hủy callback cũ nếu còn tồn tại
-                    filePathCallback?.onReceiveValue(null)
-                    filePathCallback = callback
-
-                    if (callback == null) {
+                    if (this@MainActivity.filePathCallback != null) {
+                        this@MainActivity.filePathCallback!!.onReceiveValue(null)
+                    }
+                    this@MainActivity.filePathCallback = filePathCallback
+                    val intent = fileChooserParams?.createIntent()
+                    try {
+                        startActivityForResult(intent, FILE_CHOOSER_RESULT_CODE)
+                    } catch (e: Exception) {
+                        this@MainActivity.filePathCallback = null
                         return false
                     }
-
-                    return try {
-                        val intent = params?.createIntent()
-
-                        if (intent == null) {
-                            filePathCallback?.onReceiveValue(null)
-                            filePathCallback = null
-                            return false
-                        }
-
-                        startActivityForResult(
-                            intent,
-                            FILE_CHOOSER_RESULT_CODE
-                        )
-
-                        true
-
-                    } catch (e: Exception) {
-                        filePathCallback?.onReceiveValue(null)
-                        filePathCallback = null
-                        false
-                    }
+                    return true
                 }
             }
 
-            // ---------- ANDROID APP BRIDGE ----------
-
-            webView.addJavascriptInterface(
-                object {
-
-                    @JavascriptInterface
-                    fun openApp(packageName: String) {
-
-                        runOnUiThread {
-
-                            try {
-                                val intent =
-                                    packageManager.getLaunchIntentForPackage(
-                                        packageName
-                                    )
-
-                                if (intent != null) {
-
-                                    intent.addFlags(
-                                        Intent.FLAG_ACTIVITY_NEW_TASK
-                                    )
-
+            // Cấu hình mở cửa sổ tự do
+            webView.addJavascriptInterface(object {
+                @JavascriptInterface
+                fun openApp(packageName: String) {
+                    runOnUiThread {
+                        try {
+                            val intent = packageManager.getLaunchIntentForPackage(packageName)
+                            if (intent != null) {
+                                val options = ActivityOptions.makeBasic()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                     try {
-                                        val options =
-                                            ActivityOptions.makeBasic()
-
-                                        if (
-                                            Build.VERSION.SDK_INT >=
-                                            Build.VERSION_CODES.N
-                                        ) {
-                                            try {
-                                                val method =
-                                                    options.javaClass.getMethod(
-                                                        "setLaunchWindowingMode",
-                                                        Int::class.javaPrimitiveType
-                                                    )
-
-                                                // 5 = Freeform window mode
-                                                method.invoke(options, 5)
-
-                                            } catch (_: Exception) {
-                                                // Thiết bị không hỗ trợ
-                                                // chế độ cửa sổ tự do
-                                            }
-                                        }
-
-                                        startActivity(
-                                            intent,
-                                            options.toBundle()
-                                        )
-
-                                    } catch (_: Exception) {
-
-                                        startActivity(intent)
-                                    }
+                                        val method = options.javaClass.getMethod("setLaunchWindowingMode", Int::class.javaPrimitiveType)
+                                        method.invoke(options, 5)
+                                    } catch (e: Exception) { e.printStackTrace() }
                                 }
-
-                            } catch (_: Exception) {
-                                // Không thể mở ứng dụng
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(intent, options.toBundle())
                             }
+                        } catch (e: Exception) {
+                            try {
+                                val intent = packageManager.getLaunchIntentForPackage(packageName)
+                                if (intent != null) {
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(intent)
+                                }
+                            } catch (ex: Exception) {}
                         }
                     }
-
-                },
-                "AndroidApp"
-            )
-
-            // ---------- SHELL BRIDGE ----------
-
-            // QUAN TRỌNG:
-            // ShellBridge phiên bản mới nhận 2 tham số:
-            // WebView và filesDir.
-
-            webView.addJavascriptInterface(
-                ShellBridge(webView, filesDir),
-                "Shell"
-            )
-
-            // ---------- WEBVIEW CLIENT ----------
-
-            webView.webViewClient = object : WebViewClient() {
-
-                override fun onPageFinished(
-                    view: WebView?,
-                    url: String?
-                ) {
-                    super.onPageFinished(view, url)
                 }
-            }
+            }, "AndroidApp")
 
-            // ---------- LOAD LINUX DESKTOP ----------
+            // Terminal / File Manager / Editor thật (shell Android)
+            webView.addJavascriptInterface(ShellBridge(webView, filesDir), "Shell")
 
-            webView.loadUrl(
-                "file:///android_asset/index.html"
-            )
+            webView.webViewClient = WebViewClient()
+            webView.loadUrl("file:///android_asset/index.html")
 
         } catch (e: Exception) {
-
-            val errorMessage = e.message ?: "Unknown error"
-
-            webViewFallback(errorMessage)
+            webView.loadData("<html><body style='background:red;color:white;'><h2>Lỗi: ${e.message}</h2></body></html>", "text/html", "UTF-8")
         }
     }
 
-    // ---------- WEBVIEW ERROR ----------
-
-    private fun webViewFallback(message: String) {
-
-        val safeMessage = message
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-
-        val html = """
-            <html>
-            <head>
-                <meta name="viewport"
-                    content="width=device-width, initial-scale=1">
-            </head>
-            <body style="
-                background:#180000;
-                color:white;
-                font-family:Arial;
-                padding:24px;
-            ">
-                <h2>Linux Launcher Error</h2>
-                <p>$safeMessage</p>
-            </body>
-            </html>
-        """.trimIndent()
-
-        try {
-            webView.loadDataWithBaseURL(
-                null,
-                html,
-                "text/html",
-                "UTF-8",
-                null
-            )
-        } catch (_: Exception) {
-        }
-    }
-
-    // ---------- FILE PICKER RESULT ----------
-
-    @Deprecated("Deprecated in Android API")
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?
-    ) {
-        super.onActivityResult(
-            requestCode,
-            resultCode,
-            data
-        )
-
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == FILE_CHOOSER_RESULT_CODE) {
-
-            val callback = filePathCallback ?: return
-
+            if (filePathCallback == null) return
             var results: Array<Uri>? = null
-
             if (resultCode == Activity.RESULT_OK && data != null) {
-
-                val clipData = data.clipData
-
-                if (clipData != null) {
-
-                    results = Array(clipData.itemCount) { index ->
-                        clipData.getItemAt(index).uri
-                    }
-
-                } else {
-
-                    val uri = data.data
-
-                    if (uri != null) {
-                        results = arrayOf(uri)
-                    }
+                val dataString = data.dataString
+                if (dataString != null) {
+                    results = arrayOf(Uri.parse(dataString))
                 }
             }
-
-            callback.onReceiveValue(results)
-
+            filePathCallback!!.onReceiveValue(results)
             filePathCallback = null
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
         }
-    }
-
-    // ---------- ACTIVITY DESTROY ----------
-
-    override fun onDestroy() {
-
-        filePathCallback?.onReceiveValue(null)
-        filePathCallback = null
-
-        if (::webView.isInitialized) {
-            webView.stopLoading()
-            webView.removeJavascriptInterface("Shell")
-            webView.removeJavascriptInterface("AndroidApp")
-            webView.destroy()
-        }
-
-        super.onDestroy()
     }
 }
