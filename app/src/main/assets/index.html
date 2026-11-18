@@ -31,7 +31,7 @@ input,textarea,button{font-family:inherit}
 #winBar{flex:1 1 auto}
 .clock,.pinned-item,.ws{color:var(--tb-color,#fff)}
 .ws-div{background:var(--tb-color,#fff)}
-.dropdown{position:fixed;top:var(--tbh);left:0;background:rgba(30,30,30,.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);width:320px;max-width:100%;height:500px;max-height:calc(100% - var(--tbh) - 10px);display:none;flex-direction:column;z-index:10003;overflow:hidden;box-shadow:4px 4px 20px rgba(0,0,0,.5)}
+.dropdown{position:fixed;top:var(--tbh);left:0;background:rgba(30,30,30,.85);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);width:320px;max-width:100%;height:500px;max-height:calc(100% - var(--tbh) - 10px);display:none;flex-direction:column;z-index:44000;overflow:hidden;box-shadow:4px 4px 20px rgba(0,0,0,.5)}
 .dropdown.show{display:flex;animation:fadeUp .18s ease-out}
 .search-bar{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
 .search-bar input{width:100%;padding:8px 14px;background:rgba(255,255,255,.08);color:#fff;border:1px solid #3b82f6;outline:none;border-radius:16px;font-size:13px}
@@ -129,13 +129,6 @@ input,textarea,button{font-family:inherit}
 .ed-tab{padding:4px 12px;font-size:12px;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.1);color:#aaa;flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ed textarea{flex:1;width:100%;border:none;outline:none;resize:none;padding:8px;background:transparent;color:#fff;font:13px/1.4 monospace;user-select:text;-webkit-user-select:text;white-space:pre-wrap}
 .ed-st{display:flex;justify-content:space-between;padding:3px 10px;background:rgba(0,0,0,.25);border-top:1px solid rgba(255,255,255,.12);font-size:11px;color:#aaa;flex:0 0 auto}
-.term{display:flex;flex-direction:column;width:100%;height:100%;font:13px/1.35 monospace;color:#e6e6e6;padding:8px}
-.term-out{flex:1;overflow-y:auto;min-height:0;white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text}
-.term-out>div{min-height:1.35em}
-.c1{color:#5b8def}.c2{color:#3b82f6;font-weight:700}.ok{color:#4ade80}.er{color:#f87171}
-.term-in{flex:0 0 auto;padding-top:4px}
-.term-row{display:flex;align-items:center;gap:6px}
-.term-row input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#fff;font:13px monospace}
 .sp-nav{flex:0 0 120px;border-right:1px solid rgba(255,255,255,.1);overflow-y:auto;padding:6px 0}
 .sp-nav-item{padding:11px 14px;font-size:13px;cursor:pointer;border-left:3px solid transparent}
 .sp-nav-item.active{background:rgba(255,255,255,.1);border-left-color:#60a5fa}
@@ -148,7 +141,6 @@ input,textarea,button{font-family:inherit}
 .sp-btn{padding:7px 12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;cursor:pointer}
 .sp-btn:active{background:rgba(255,255,255,.25)}
 .sp-btn.danger{color:#f87171}.sp-btn.on{background:#3b82f6;border-color:#3b82f6}
-.sp-note{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;min-height:14px}
 .sp-num{width:64px;padding:6px;background:#1e1e1e;border:1px solid rgba(255,255,255,.2);color:#fff;text-align:right;font-size:12px}
 .sp-color{width:44px;height:30px;border:1px solid #888;background:none;padding:0}
 .sp-sel{position:relative;min-width:120px;font-size:12px}
@@ -249,7 +241,7 @@ function openModal(title,body){
 }
 function uiAlert(msg,title){
   const bd=E('div');bd.innerHTML='<div class="dlg-msg"></div><div class="btns"><button class="btn on">OK</button></div>';
-  bd.querySelector('.dlg-msg').textContent=msg;const c=openModal(title||'Thông báo',bd);bd.querySelector('button').onclick=c;
+  bd.querySelector('.dlg-msg').textContent=msg;const c=openModal(title||'',bd);bd.querySelector('button').onclick=c;
 }
 function uiConfirm(msg,cb){
   const bd=E('div');bd.innerHTML='<div class="dlg-msg"></div><div class="btns"><button class="btn" data-k="no">Hủy</button><button class="btn danger" data-k="ok">Đồng ý</button></div>';
@@ -369,7 +361,6 @@ const refreshWindows=()=>windows.forEach(w=>w.refresh());
 
 const SH=window.Shell&&window.Shell.start?window.Shell:null;
 const HOME=SH?String(SH.home()):'/';
-const NOSH='Không có cầu nối Shell (Shell='+typeof window.Shell+', start='+(window.Shell?typeof window.Shell.start:'-')+')';
 const shQ=s=>"'"+String(s).replace(/'/g,"'\\''")+"'";
 const b64=s=>btoa(unescape(encodeURIComponent(s)));
 const clean=t=>t.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g,'').replace(/\r/g,'');
@@ -391,60 +382,20 @@ async function writeFile(p,text){
 const SVG_DIR='<svg viewBox="0 0 48 48"><path d="M4 12a3 3 0 0 1 3-3h11l4 4h19a3 3 0 0 1 3 3v22a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#3b82c4"/><path d="M4 19h40v18a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#5aa7ec"/></svg>';
 const SVG_FILE='<svg viewBox="0 0 48 48"><path d="M10 4h20l10 10v28a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#e5e7eb"/><path d="M30 4v10h10z" fill="#9ca3af"/><path d="M14 24h20M14 30h20M14 36h14" stroke="#9ca3af" stroke-width="2"/></svg>';
 
-function openTerminal(root,initCmd){
-  const b=E('div','term');
-  b.innerHTML='<div class="term-out"></div><div class="term-in"><div class="ps1 c2"></div><div class="term-row"><span class="c1">❯</span><input type="text" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"><button class="btn" data-k="c">^C</button></div></div>';
-  const out=b.querySelector('.term-out'),inp=b.querySelector('input'),ps1=b.querySelector('.ps1');
-  let cwd=HOME,cur=null;const hist=[];let hp=0;
-  const user=root?'root':'shell',sym=root?'#':'$',M='__SHCWD__';
-  const win=createWindow({title:root?'Root Terminal':'Terminal',body:b});
-  const put=(t,c)=>{const d=E('div',c||'',t);out.appendChild(d);out.scrollTop=out.scrollHeight;return d};
-  const updPs=()=>{ps1.textContent=user+'@android:'+(cwd===HOME?'~':cwd)+sym};
-  updPs();
-  b.addEventListener('click',()=>{if(!getSelection().toString())try{inp.focus()}catch(e){}});
-  b.querySelector('[data-k=c]').onclick=e=>{e.stopPropagation();if(cur&&SH)SH.kill(cur)};
-  if(!SH){put(NOSH,'er');inp.disabled=true;return}
-  function run(line){
-    put(ps1.textContent+' '+line,'c2');const s=line.trim();if(!s)return;
-    hist.push(line);hp=hist.length;
-    if(s==='clear'){out.innerHTML='';return}
-    if(s==='exit'){win.close();return}
-    if(cur){put('Đang có lệnh chạy. Bấm ^C để dừng.','er');return}
-    const script='export HOME='+shQ(HOME)+' TERM=dumb\ncd '+shQ(cwd)+' 2>/dev/null\n'+line+'\n__c=$?\nprintf "\\n'+M+'%s\\n" "$(pwd)"\nexit $__c';
-    const cmd=root?"su -c 'eval \"$(printf %s "+b64(script)+" | base64 -d)\"'":script;
-    let acc='',shown=0;const live=put('');
-    const flush=fin=>{const i=acc.indexOf('\n'+M);const end=i>=0?i:(fin?acc.length:Math.max(shown,acc.length-M.length-1));if(end>shown){live.textContent+=clean(acc.slice(shown,end));shown=end;out.scrollTop=out.scrollHeight}};
-    cur=sh(cmd,cwd,t=>{acc+=t;flush(false)},code=>{
-      flush(true);const i=acc.indexOf('\n'+M);
-      if(i>=0){const p=acc.slice(i+1+M.length).split('\n')[0].trim();if(p)cwd=p}
-      if(!live.textContent)live.remove();
-      if(code)put('[exit '+code+']','er');
-      cur=null;updPs();out.scrollTop=out.scrollHeight;
-    });
-  }
-  inp.addEventListener('keydown',e=>{
-    e.stopPropagation();
-    if(e.key==='Enter'){const v=inp.value;inp.value='';run(v)}
-    else if(e.key==='ArrowUp'){e.preventDefault();if(hp>0){hp--;inp.value=hist[hp]}}
-    else if(e.key==='ArrowDown'){e.preventDefault();if(hp<hist.length-1){hp++;inp.value=hist[hp]}else{hp=hist.length;inp.value=''}}
-  });
-  const start=()=>{if(initCmd)run(initCmd)};
-  if(root)shRun('su -c id').then(r=>{if(r.code){put('Thiết bị chưa root (lệnh su không chạy được).','er');inp.disabled=true}else{put(clean(r.out).trim(),'ok');start()}});
-  else shRun('uname -a; id').then(r=>{put(clean(r.out).trim(),'ok');start()});
-  setTimeout(()=>{try{inp.focus()}catch(e){}},80);
-}
-
 function openEditor(path,content){
   const b=E('div','ed');
   b.innerHTML='<div class="ed-menu"></div><div class="ed-tab"></div><textarea spellcheck="false" autocapitalize="off"></textarea><div class="ed-st"><span class="pos"></span><span>UTF-8</span></div>';
   const menu=b.querySelector('.ed-menu'),tab=b.querySelector('.ed-tab'),ta=b.querySelector('textarea'),pos=b.querySelector('.pos');
   let cur=path&&path.startsWith('/')?path:null,win=null;ta.value=content||'';
   ta.addEventListener('keydown',e=>e.stopPropagation());
-  function upd(){tab.textContent=cur||'Chưa đặt tên';const v=ta.value.slice(0,ta.selectionStart);pos.textContent='Dòng '+v.split('\n').length+', Cột '+(v.length-v.lastIndexOf('\n'));if(win&&cur)win.title=cur.split('/').pop()}
-  async function doSave(){if(!SH)return uiAlert(NOSH);tab.textContent='Đang lưu...';const ok=await writeFile(cur,ta.value);if(ok)tab.textContent=cur+' — đã lưu';else uiAlert('Không lưu được (không có quyền ghi hoặc thiếu lệnh base64).')}
+  function upd(){
+    tab.textContent=cur||'Chưa đặt tên';const v=ta.value.slice(0,ta.selectionStart);pos.textContent='Dòng '+v.split('\n').length+', Cột '+(v.length-v.lastIndexOf('\n'));
+    if(win&&cur){win.title=cur.split('/').pop();win.el.querySelector('.sp-t').textContent=win.title;renderWinBar()}
+  }
+  async function doSave(){if(!SH)return;tab.textContent='Đang lưu...';const ok=await writeFile(cur,ta.value);tab.textContent=ok?cur+' — đã lưu':cur+' — lỗi lưu'}
   const saveAs=()=>uiPrompt('Lưu thành (đường dẫn đầy đủ)',cur||HOME+'/new.txt',p=>{if(!p.startsWith('/'))p=HOME+'/'+p;cur=p;doSave().then(upd)});
   [['Mới',()=>{ta.value='';cur=null;upd()}],
-   ['Mở',()=>uiPrompt('Đường dẫn file',HOME+'/',async p=>{const r=await readFile(p);if(r.code===2)return uiAlert('File quá lớn (>1MB)');if(r.code)return uiAlert('Không đọc được file');ta.value=r.out;cur=p;upd()})],
+   ['Mở',()=>uiPrompt('Đường dẫn file',HOME+'/',async p=>{const r=await readFile(p);if(r.code)return;ta.value=r.out;cur=p;upd()})],
    ['Lưu',()=>{cur?doSave():saveAs()}],['Lưu thành',saveAs],['Đóng',()=>win.close()]
   ].forEach(([l,f])=>{const m=E('div','ed-mi',l);m.addEventListener('click',e=>{e.stopPropagation();f()});menu.appendChild(m)});
   ['input','keyup','click','select'].forEach(ev=>ta.addEventListener(ev,upd));
@@ -467,19 +418,19 @@ function openFileManager(start){
     let acc='';const parts=cwd.split('/').filter(Boolean);
     parts.forEach((p,i)=>{acc+='/'+p;pathEl.appendChild(E('span','',' › '));const c=E('span','crumb'+(i===parts.length-1?' last':''),p),t=acc;c.onclick=()=>go(t);pathEl.appendChild(c)});
     pathEl.scrollLeft=pathEl.scrollWidth;sc.textContent=cwd;
-    if(!SH){sn.textContent='';return msg(NOSH)}
+    if(!SH){sn.textContent='';grid.innerHTML='';return}
     const my=++tok;msg('Đang tải...');const r=await shRun(LS,cwd);if(my!==tok)return;
-    if(r.code!==0){sn.textContent='';return msg('Không truy cập được (thiếu quyền hoặc không tồn tại)')}
+    if(r.code!==0){sn.textContent='';return msg('Không truy cập được')}
     const ents=r.out.split('\n').filter(x=>x.length>1).map(l=>({dir:l[0]==='d',name:l.slice(1)})).sort((x,y)=>x.dir!==y.dir?(x.dir?-1:1):x.name.localeCompare(y.name));
     grid.innerHTML='';if(!ents.length)msg('Thư mục trống');
     ents.forEach(({dir,name})=>{
       const it=E('div','fm-it');it.innerHTML=dir?SVG_DIR:SVG_FILE;it.appendChild(E('span','',name));
-      const open=async()=>{if(dir)return go(cwd==='/'?'/'+name:cwd+'/'+name);const p=(cwd==='/'?'':cwd)+'/'+name,r=await readFile(p);if(r.code===2)uiAlert('File quá lớn (>1MB)');else if(r.code)uiAlert('Không đọc được file');else openEditor(p,r.out)};
+      const open=async()=>{if(dir)return go(cwd==='/'?'/'+name:cwd+'/'+name);const p=(cwd==='/'?'':cwd)+'/'+name,r=await readFile(p);if(!r.code)openEditor(p,r.out)};
       it.addEventListener('click',open);
       ctxOn(it,(x,y)=>showCtx(x,y,[
         {label:'Mở',action:open},
-        {label:'Đổi tên',action:()=>uiPrompt('Tên mới',name,async nn=>{if(nn===name)return;if(nn.includes('/'))return uiAlert('Tên không được chứa "/"');const r=await shRun('mv '+q(name)+' '+q(nn),cwd);if(r.code)uiAlert(clean(r.out)||'Lỗi');paint()})},
-        {label:'Xóa',danger:true,action:()=>uiConfirm('Xóa "'+name+'"?',async()=>{const r=await shRun('rm -rf '+q(name),cwd);if(r.code)uiAlert(clean(r.out)||'Lỗi');paint()})},
+        {label:'Đổi tên',action:()=>uiPrompt('Tên mới',name,async nn=>{if(nn===name||nn.includes('/'))return;await shRun('mv '+q(name)+' '+q(nn),cwd);paint()})},
+        {label:'Xóa',danger:true,action:()=>uiConfirm('Xóa "'+name+'"?',async()=>{await shRun('rm -rf '+q(name),cwd);paint()})},
         {label:'Thuộc tính',action:async()=>{const r=await shRun('ls -ld '+q(name),cwd);uiAlert(clean(r.out).trim()||name,'Thuộc tính')}}
       ]));
       grid.appendChild(it);
@@ -493,16 +444,15 @@ function openFileManager(start){
     else if(a==='fwd'&&hi<hist.length-1){hi++;cwd=hist[hi];paint()}
     else if(a==='up')go(cwd.replace(/\/[^/]+$/,'')||'/');
     else if(a==='home')go(HOME);
-    else if(a==='new')uiPrompt('Tên thư mục mới','',async nn=>{if(nn.includes('/'))return uiAlert('Tên không được chứa "/"');const r=await shRun('mkdir '+q(nn),cwd);if(r.code)uiAlert(clean(r.out)||'Lỗi');paint()});
+    else if(a==='new')uiPrompt('Tên thư mục mới','',async nn=>{if(nn.includes('/'))return;await shRun('mkdir '+q(nn),cwd);paint()});
   });
   paint();createWindow({title:'File Manager',body:b});
 }
 
-const KEY_SEC='k_sections_v1',KEY_PIN='k_pinned',KEY_DESK='k_desk',KEY_REC='k_recent';
-const mk=(n,t)=>({name:n,target:t||'cmd:'+n,icon:''});
+const KEY_SEC='k_sections_v2',KEY_PIN='k_pinned_v2',KEY_DESK='k_desk_v2',KEY_REC='k_recent_v2';
+const mk=(n,t)=>({name:n,target:t||'',icon:''});
 const DEFAULTS=[
- {name:'Favorites',apps:[mk('terminal emulator','terminal'),mk('root terminal emulator','root_terminal'),mk('file manager','file_manager'),mk('text editor','text_editor'),mk('web browser','url:https://www.kali.org'),mk('docs','url:https://www.kali.org/docs/'),mk('bugs','url:https://bugs.kali.org'),mk('offsec training','url:https://www.offsec.com/courses/'),mk('exploit database','url:https://www.exploit-db.com'),mk('vulnhub','url:https://www.vulnhub.com')]},
- ...[['01 - Information Gathering','nmap dmitry ike-scan recon-ng theharvester maltego'],['02 - Vulnerability Analysis','nikto lynis openvas'],['03 - Web Application Analysis','burpsuite sqlmap wpscan dirb zaproxy'],['04 - Database Assessment','sqlmap sqlitebrowser'],['05 - Password Attacks','john hashcat hydra crunch'],['06 - Wireless Attacks','aircrack-ng wifite kismet reaver'],['07 - Reverse Engineering','ghidra radare2 gdb'],['08 - Exploitation Tools','msfconsole searchsploit beef-xss'],['09 - Sniffing & Spoofing','wireshark ettercap bettercap'],['10 - Post Exploitation','weevely evil-winrm'],['11 - Forensics','autopsy binwalk volatility bulk-extractor'],['12 - Reporting Tools','cutycapt faraday pipal'],['13 - Social Engineering Tools','setoolkit sherlock']].map(([n,a])=>({name:n,apps:a.split(' ').map(x=>mk(x))}))
+ {name:'Favorites',apps:[mk('file manager','file_manager'),mk('text editor','text_editor'),mk('cài đặt','settings')]}
 ];
 let sections=jget(KEY_SEC,null);
 if(!Array.isArray(sections)||!sections.length)sections=JSON.parse(JSON.stringify(DEFAULTS));
@@ -556,16 +506,13 @@ iconInput.addEventListener('change',ev=>{
 function bounce(p){document.querySelectorAll('.desk-item,.pinned-item.icon-only').forEach(el=>{if(el.title===p.name){el.classList.remove('bouncing');void el.offsetWidth;el.classList.add('bouncing');setTimeout(()=>el.classList.remove('bouncing'),400)}})}
 function addRecent(p){recent=recent.filter(r=>!same(r,p));recent.unshift({name:p.name,target:p.target||''});recent=recent.slice(0,12);ls.set(KEY_REC,JSON.stringify(recent))}
 function launch(p){
-  const t=p.target||'';if(!t){uiAlert('App "'+p.name+'" chưa có đường dẫn. Nhấn giữ để "Đổi đường dẫn".');return false}
+  const t=p.target||'';if(!t)return false;
   if(t==='file_manager')openFileManager();
-  else if(t==='terminal')openTerminal(false);
-  else if(t==='root_terminal')openTerminal(true);
   else if(t==='text_editor')openEditor('','');
   else if(t==='settings')openSettings();
-  else if(t.startsWith('cmd:'))openTerminal(false,t.slice(4));
-  else if(t.startsWith('url:')){try{window.open(t.slice(4),'_blank')}catch(e){uiAlert(t.slice(4))}}
+  else if(t.startsWith('url:')){try{window.open(t.slice(4),'_blank')}catch(e){}}
   else if(window.AndroidApp&&typeof window.AndroidApp.openApp==='function'){try{window.AndroidApp.openApp(t)}catch(e){}}
-  else{uiAlert('Không mở được: '+t);return false}
+  else return false;
   addRecent(p);bounce(p);return true;
 }
 
@@ -595,7 +542,7 @@ function renderSub(){
       const it=[];
       if(!s.v){
         it.push({label:'Đổi tên',action:()=>uiPrompt('Tên app',a.name,v=>{const pi=pinIdx({name:a.name,target:a.target});if(pi>=0)pinned[pi].name=v;a.name=v;refresh()})});
-        it.push({label:'Đổi đường dẫn',action:()=>uiPrompt('Đường dẫn / lệnh (vd: cmd:nmap, url:https://..., com.pkg.app)',a.target,v=>{a.target=v;refresh()})});
+        it.push({label:'Đổi đường dẫn',action:()=>uiPrompt('Đường dẫn (vd: url:https://..., com.pkg.app)',a.target,v=>{a.target=v;refresh()})});
       }
       it.push({label:'Đổi ảnh',action:()=>pickIcon(a)});
       if(a.icon)it.push({label:'Xóa ảnh riêng',action:()=>{a.icon='';refresh()}});
@@ -633,7 +580,7 @@ function refresh(){renderMain();renderSub();renderPinned();renderDesk();save()}
 $('addMainBtn').addEventListener('click',e=>{e.stopPropagation();let n=1;const ex=new Set(sections.map(s=>s.name));while(ex.has('New folder '+n))n++;sections.push({name:'New folder '+n,apps:[]});activeIndex=sections.length-1;refresh()});
 addSubBtn.addEventListener('click',e=>{
   e.stopPropagation();const s=sections[activeIndex];if(!s)return;
-  uiPrompt('Tên app','App',n=>{uiPrompt('Đường dẫn / lệnh (vd: cmd:nmap, com.pkg.app)','',t=>{s.apps.push({name:n,target:t,icon:''});refresh()})});
+  uiPrompt('Tên app','App',n=>{uiPrompt('Đường dẫn (vd: url:https://..., com.pkg.app)','',t=>{s.apps.push({name:n,target:t,icon:''});refresh()})});
 });
 mainList.addEventListener('click',e=>{e.stopPropagation();const it=e.target.closest('.ditem');if(!it)return;activeIndex=Number(it.dataset.i);searchTerm='';searchInput.value='';refresh()});
 searchInput.addEventListener('input',e=>{searchTerm=e.target.value.trim().toLowerCase();renderMain()});
@@ -702,7 +649,7 @@ videoInput.addEventListener('change',ev=>{
   const file=ev.target.files&&ev.target.files[0];videoInput.value='';
   if(!file||!file.type.startsWith('video/'))return;
   const reader=new FileReader();
-  reader.onload=e=>{const ok=saveVid(vidKey(),e.target.result);applyBackground();if(!ok)uiAlert('Video quá lớn nên không lưu được vĩnh viễn. Hãy chọn video nhỏ hơn (vài MB).')};
+  reader.onload=e=>{saveVid(vidKey(),e.target.result);applyBackground()};
   reader.readAsDataURL(file);
 });
 
@@ -716,7 +663,7 @@ function openSettings(){
   '<div class="sp-page active" id="sp-wp"><div class="sp-title">Hình nền</div><div class="sp-preview" id="spPreview"></div>'+
   '<div class="sp-row"><span id="spWsLabel"></span><div class="sp-btns"><button class="sp-btn" id="spPick">Chọn ảnh</button><button class="sp-btn" id="spVideoPick">Chọn video</button><button class="sp-btn danger" id="spClear">Xóa</button></div></div>'+
   '<div class="sp-row"><span>Kiểu hiển thị</span><div class="sp-sel" id="spFit"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
-  '<div class="sp-row"><span>Dùng cho cả 4 màn hình</span><button class="sp-btn" id="spAll">Áp dụng</button></div><div class="sp-note" id="spNote"></div></div>'+
+  '<div class="sp-row"><span>Dùng cho cả 4 màn hình</span><button class="sp-btn" id="spAll">Áp dụng</button></div></div>'+
   '<div class="sp-page" id="sp-ui"><div class="sp-title">Giao diện</div>'+
   '<div class="sp-row"><span>Logo thanh trên</span><div class="sp-btns"><button class="sp-btn" id="spTestPick">Đổi ảnh</button><button class="sp-btn" id="spTestReset">Khôi phục</button></div></div>'+
   '<div class="sp-row"><span>Logo trong menu</span><div class="sp-btns"><button class="sp-btn" id="spLogoPick">Đổi ảnh</button><button class="sp-btn" id="spLogoReset">Khôi phục</button></div></div>'+
@@ -733,8 +680,7 @@ function openSettings(){
   '<div class="sp-row"><span>DPI / Tỉ lệ (%)</span><input type="number" class="sp-num" id="spDpiNum" min="70" max="200" step="10"></div>'+
   '<div class="sp-row"><span>Tần số quét (Hz)</span><div class="sp-sel" id="spHz"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div></div></div>';
   createWindow({title:'Cài đặt',body:b,max:true});
-  const q=id=>b.querySelector('#'+id),spNote=q('spNote'),spClockSec=q('spClockSec'),spStretchBtn=q('spStretchBtn');
-  const spMsg=m=>{spNote.textContent=m};
+  const q=id=>b.querySelector('#'+id),spClockSec=q('spClockSec'),spStretchBtn=q('spStretchBtn');
   function bindSel(el,labels,get,set){
     const cur=el.querySelector('.sp-sel-cur'),list=el.querySelector('.sp-sel-list');list.innerHTML='';
     const render=()=>{const val=get();cur.textContent=labels[val]||'';list.querySelectorAll('div').forEach(o=>o.classList.toggle('active',o.dataset.v===String(val)))};
@@ -754,14 +700,14 @@ function openSettings(){
   bindSel(q('spHz'),{0:'Mặc định',60:'60 Hz',90:'90 Hz',120:'120 Hz',144:'144 Hz'},()=>hz,k=>{hz=parseInt(k,10);ls.set('linuxweb_hz',String(hz));applyHz()});
   const renderClockSec=()=>{spClockSec.textContent=clockSec?'Bật':'Tắt'};
   const renderStretch=()=>{spStretchBtn.textContent=isStretch?'Bật':'Tắt';spStretchBtn.classList.toggle('on',isStretch)};
-  q('spPick').addEventListener('click',()=>{spMsg('');fileInput.click()});
-  q('spVideoPick').addEventListener('click',()=>{spMsg('');videoInput.click()});
-  q('spClear').addEventListener('click',()=>{const k=bgKey(),v=vidKey();delete bgMem[k];ls.del(k);delete vidMem[v];ls.del(v);applyBackground();spMsg('Đã xóa hình nền màn hình '+ws+'.')});
+  q('spPick').addEventListener('click',()=>fileInput.click());
+  q('spVideoPick').addEventListener('click',()=>videoInput.click());
+  q('spClear').addEventListener('click',()=>{const k=bgKey(),v=vidKey();delete bgMem[k];ls.del(k);delete vidMem[v];ls.del(v);applyBackground()});
   q('spAll').addEventListener('click',()=>{
     const img=getBg(bgKey()),vid=getVid(vidKey());
-    if(!img&&!vid){spMsg('Màn hình này chưa có hình nền.');return}
+    if(!img&&!vid)return;
     for(let i=1;i<=4;i++){if(img)saveBg(bgKeyOf(i),img);if(vid)saveVid(vidKeyOf(i),vid)}
-    applyBackground();spMsg('Đã áp dụng cho cả 4 màn hình.');
+    applyBackground();
   });
   q('spTestPick').addEventListener('click',()=>pickIcon({type:'test'}));
   q('spTestReset').addEventListener('click',()=>resetIcon({type:'test'}));
