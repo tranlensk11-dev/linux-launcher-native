@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#000000">
-<title>Linux Desktop</title>
+<title>flsh linux Desktop</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:manipulation}
@@ -69,8 +69,25 @@ input,textarea,button{font-family:inherit}
 @keyframes wClose{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.82)}}
 @keyframes fadeUp{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
 @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes fadeOut{0%{opacity:1}100%{opacity:0}}
+@keyframes modalOut{0%{opacity:1;transform:none}100%{opacity:0;transform:scale(.92) translateY(8px)}}
+.modal-bk.out{animation:fadeOut .17s ease-in forwards;pointer-events:none}
+.modal-bk.out .modal{animation:modalOut .17s ease-in forwards}
+@keyframes pinOut{0%{opacity:1;transform:none}100%{opacity:0;transform:translateX(-30px)}}
+.pin-out{animation:pinOut .26s ease-in forwards;pointer-events:none}
 @keyframes bounce{0%{transform:scale(1)}30%{transform:scale(1.25)}60%{transform:scale(.9)}100%{transform:scale(1)}}
 .bouncing{animation:bounce .4s}
+@keyframes dropIn{0%{opacity:0;transform:translateY(-30px)}100%{opacity:1;transform:none}}
+.drop-in{animation:dropIn .35s cubic-bezier(.3,.6,.4,1) both}
+@keyframes pinIn{0%{opacity:0;transform:translateX(-30px)}100%{opacity:1;transform:none}}
+.pin-in{animation:pinIn .35s cubic-bezier(.3,.6,.4,1) both}
+@keyframes selPop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+.sel-pop{animation:selPop .28s ease-out}
+.ditem.lifted,.sub-item.lifted{position:relative;z-index:6;background:rgba(70,75,90,.97);box-shadow:0 6px 18px rgba(0,0,0,.55)}
+.drop-before{box-shadow:inset 0 2px 0 #60a5fa}
+.drop-after{box-shadow:inset 0 -2px 0 #60a5fa}
+.desk-item.lifted{z-index:6;background:none!important;box-shadow:none;transform:scale(1.1)}
+.desk-slot{display:none}
 .sp.max{border:none;border-radius:0}
 .sp-head{flex:0 0 auto;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 14px;touch-action:none;cursor:move;border-bottom:1px solid rgba(255,255,255,.1);font-size:14px;font-weight:600}
 .sp.max .sp-head{cursor:default}
@@ -94,12 +111,12 @@ input,textarea,button{font-family:inherit}
 .dlg-msg{white-space:pre-wrap;font-size:13px;margin-bottom:12px;word-break:break-word}
 .dlg-input{width:100%;padding:8px;background:#1e1e22;color:#fff;border:1px solid #3b82f6;outline:none;font-size:14px;margin-bottom:12px}
 .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.btn{padding:7px 12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;cursor:pointer;border-radius:3px}
+.btn{padding:7px 12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;cursor:pointer;border-radius:0}
 .btn:active{background:rgba(255,255,255,.25)}
 .btn.on{background:#3b82f6;border-color:#3b82f6}.btn.danger{color:#f87171}
 .desktop{position:fixed;inset:0;z-index:10001;pointer-events:none}
 .desk-item{position:absolute;touch-action:none;pointer-events:auto;display:flex;flex-direction:column;align-items:center;padding-top:6px;gap:4px;cursor:pointer}
-.desk-item:active{background:rgba(255,255,255,.15)}
+.desk-item:active{background:none}
 .desk-name{font-size:12px;line-height:1.2;text-align:center;text-shadow:0 1px 3px #000;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .fm{display:flex;flex-direction:column;width:100%;height:100%;background:#2b2d33;color:#e5e5e5}
 .fm-tb{display:flex;align-items:center;gap:4px;padding:6px 8px;background:#33363d;border-bottom:1px solid #1d1f24}
@@ -141,14 +158,28 @@ input,textarea,button{font-family:inherit}
 .sp-btn{padding:7px 12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;cursor:pointer}
 .sp-btn:active{background:rgba(255,255,255,.25)}
 .sp-btn.danger{color:#f87171}.sp-btn.on{background:#3b82f6;border-color:#3b82f6}
+.sp-note{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;min-height:14px}
 .sp-num{width:64px;padding:6px;background:#1e1e1e;border:1px solid rgba(255,255,255,.2);color:#fff;text-align:right;font-size:12px}
-.sp-color{width:44px;height:30px;border:1px solid #888;background:none;padding:0}
+.sp-colorbtn{width:44px;height:30px;border:1px solid #bbb;padding:0;cursor:pointer}
+.cp-sv{position:relative;width:100%;height:150px;touch-action:none;cursor:crosshair;background:linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,rgba(255,255,255,0))}
+.cp-knob{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.6);pointer-events:none}
+.cp-hue{width:100%;height:16px;margin:12px 0;-webkit-appearance:none;appearance:none;border-radius:8px;outline:none;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.cp-hue::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #555}
+.cp-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.cp-prev{flex:0 0 44px;height:34px;border:1px solid #888}
+.cp-row .dlg-input{margin:0;flex:1;min-width:0}
+.cp-sw{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:12px}
+.cp-sw div{aspect-ratio:1;border:1px solid rgba(255,255,255,.4);cursor:pointer}
 .sp-sel{position:relative;min-width:120px;font-size:12px}
 .sp-sel-cur{position:relative;padding:7px 26px 7px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,.2);cursor:pointer}
-.sp-sel-cur::after{content:'▾';position:absolute;right:9px;top:7px}
+.sp-sel-cur::after{content:'▾';position:absolute;right:9px;top:7px;transition:transform .2s}
+.sp-sel.open .sp-sel-cur::after{transform:rotate(180deg)}
 .sp-sel-list{display:none;position:absolute;top:100%;left:0;right:0;background:#1e1e1e;border:1px solid rgba(255,255,255,.2);z-index:20}
-.sp-sel.open .sp-sel-list{display:block}
-.sp-sel-list div{padding:8px 10px;cursor:pointer}.sp-sel-list div.active{background:rgba(255,255,255,.15)}
+.sp-sel.open .sp-sel-list{display:block;transform-origin:top;animation:selOpen .18s ease-out}
+@keyframes selOpen{0%{opacity:0;transform:translateY(-6px) scaleY(.9)}100%{opacity:1;transform:none}}
+.sp-sel.open .sp-sel-list div{animation:fadeUp .22s ease-out both}
+.sp-sel.open .sp-sel-list div:nth-child(2){animation-delay:.03s}.sp-sel.open .sp-sel-list div:nth-child(3){animation-delay:.06s}.sp-sel.open .sp-sel-list div:nth-child(4){animation-delay:.09s}.sp-sel.open .sp-sel-list div:nth-child(5){animation-delay:.12s}
+.sp-sel-list div{padding:8px 10px;cursor:pointer;transition:background .12s}.sp-sel-list div.active{background:rgba(255,255,255,.15)}
 body[data-tb=bottom] .top-bar,body[data-tb=bottom] .square-icon,body[data-tb=bottom] .taskbar{top:auto;bottom:0}
 body[data-tb=bottom] .dropdown{top:auto;bottom:var(--tbh)}
 body[data-tb=left] .top-bar,body[data-tb=right] .top-bar{width:var(--tbh);height:100%}
@@ -165,13 +196,69 @@ body[data-tb=left] .workspaces,body[data-tb=right] .workspaces{flex-direction:co
 body[data-tb=left] .clock,body[data-tb=right] .clock{display:none}
 body[data-tb=left] .dropdown{top:0;left:var(--tbh)}
 body[data-tb=right] .dropdown{top:0;left:auto;right:var(--tbh)}
+#sys{position:fixed;inset:0;z-index:90000;display:none;color:#fff;font-family:system-ui,sans-serif}
+.sys-screen{position:absolute;inset:0;overflow:hidden;animation:fadeIn .3s}
+#sys.sys-out{animation:sysOut .35s ease-in forwards;pointer-events:none}
+@keyframes sysOut{to{opacity:0;transform:translateY(-24px)}}
+.grub,.bootlog{background:#000;font-family:ui-monospace,Menlo,Consolas,monospace}
+.grub{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;font-size:13px;color:#ddd;text-align:center;line-height:1.5}
+.grub-box{border:1px solid #ccc;width:min(92%,460px);margin:12px 0;text-align:left;padding:4px 0}
+.grub-it{padding:1px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.grub-it.sel{background:#ddd;color:#000}
+.grub-cd{margin-top:8px;color:#9ca3af}
+.bootlog{display:flex;flex-direction:column;justify-content:flex-end;padding:10px;font-size:11px;line-height:1.45;color:#cfcfcf;word-break:break-all}
+.bl-ok{color:#4ade80}
+.splash{background:#0c1016;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px}
+.bt-logo img{width:min(32vw,150px);height:auto;display:block}
+.bt-bar{width:min(60vw,260px);height:4px;background:rgba(255,255,255,.15)}
+.bt-bar i{display:block;height:100%;width:0;background:#3b82f6}
+.lk-in{flex:1;min-width:0;padding:10px 12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-right:none;color:#fff;outline:none;font-size:15px}
+.lk-in::placeholder{color:rgba(255,255,255,.6)}
+.lk-go{width:44px;background:#3b82f6;border:1px solid #3b82f6;color:#fff;font-size:18px;cursor:pointer}
+.lk-err{min-height:18px;font-size:12px;color:#f87171}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .35s}
+.grub{align-items:center;text-align:left}.grub-cd{width:min(92%,460px)}
+.grub-h{width:min(92%,460px);font-size:12px;color:#ddd}
+.di{background:#0000a8;font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;display:flex;flex-direction:column;align-items:center;font-size:13px}
+.di-top{width:100%;padding:3px 10px;background:#0000a8;color:#fff;font-weight:700}
+.di-w{margin:auto;width:min(94%,580px);max-height:88%;display:flex;flex-direction:column;background:#c0c0c0;color:#000;box-shadow:8px 8px 0 rgba(0,0,0,.55);padding:10px 14px 14px}
+.di-title{align-self:center;background:#c0c0c0;padding:0 8px;margin:-2px 0 10px;font-weight:700}
+.di-body{overflow-y:auto;min-height:0}
+.di-p{white-space:pre-wrap;margin-bottom:10px;line-height:1.45}
+.di-list{background:#a8a8a8;border:1px solid #000;max-height:190px;overflow-y:auto;margin-bottom:10px}
+.di-i{padding:3px 8px;cursor:pointer}
+.di-i.sel{background:#a00;color:#fff}
+.di-in{width:100%;padding:4px 6px;margin-bottom:8px;background:#0000a8;color:#fff;border:none;outline:none;font:inherit}
+.di-err{color:#a00;font-weight:700;min-height:16px}
+.di-btns{display:flex;justify-content:space-around;margin-top:10px}
+.di-b{background:#a8a8a8;color:#000;border:none;font:inherit;padding:3px 10px;cursor:pointer}
+.di-b.f{background:#a00;color:#fff}
+.di-bar{border:1px solid #000;background:#a8a8a8;height:18px;margin:6px 0 10px}
+.di-bar i{display:block;height:100%;width:0;background:#0000a8;transition:width .4s}
+.di-log{height:84px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;font-size:12px}
+.klock{background:rgba(4,12,32,.42);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);overflow:hidden}
+.kl-st{position:absolute;top:8px;right:14px;display:flex;gap:14px;font-size:13px;align-items:center;opacity:.9;z-index:2}
+.kl-pw{cursor:pointer;font-size:15px}
+.kl-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88%,340px);z-index:2}
+.kl-id{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.kl-av{width:64px;height:64px;border:2px solid rgba(255,255,255,.6);background:#0d2a52;overflow:hidden;flex:0 0 auto}
+.kl-av img{width:100%;height:100%;object-fit:cover;display:block}
+.kl-user{font-size:19px;font-weight:700;text-shadow:0 1px 3px #000}
+.kl-lb{font-size:13px;margin-bottom:6px}
+.kl-in{width:100%;height:32px;padding:0 8px;border:2px solid #4a74b5;background:linear-gradient(#ececec,#cdcdcd);color:#111;outline:none;font-size:15px}
+.kl-err{min-height:18px;font-size:12px;color:#ff9a9a;margin-top:4px}
+.kl-btns{display:flex;justify-content:space-between;margin-top:30px}
+.kl-b{min-width:82px;padding:6px 12px;border:1px solid #a9bfdc;background:linear-gradient(#35689f,#16365f);color:#fff;font-size:13px;cursor:pointer;border-radius:3px}
+.kl-b:active{filter:brightness(1.25)}
+.kl-oth{margin-top:34px;font-size:13px;color:#7f8ea6;cursor:pointer}
 </style>
 </head>
 <body data-tb="top">
 <video id="videoBg" playsinline loop muted></video>
 <div id="ui">
 <div class="top-bar"></div>
-<div class="square-icon" id="squareIcon" role="button"><img id="sqImg" src="file:///android_asset/test.png" alt="menu"></div>
+<div class="square-icon" id="squareIcon" role="button"><img id="sqImg" src="file:///android_asset/flshlogo.png" alt="menu"></div>
 <div class="desktop" id="desktop"></div>
 <div class="taskbar">
 <div class="pinned-bar" id="pinnedBar"></div>
@@ -186,7 +273,7 @@ body[data-tb=right] .dropdown{top:0;left:auto;right:var(--tbh)}
 <div class="col"><div class="list" id="mainList"></div><div class="addbtn" id="addMainBtn">+ Mục</div></div>
 <div class="col"><div class="list" id="subList"></div><div class="addbtn" id="addSubBtn" style="display:none">+ Thêm app</div></div>
 </div>
-<div class="bottom-bar"><img id="logoImg" src="file:///android_asset/logo.png" alt=""><b>linux</b><div class="settings-btn" id="settingsBtn" role="button">Cài đặt</div></div>
+<div class="bottom-bar"><img id="logoImg" src="file:///android_asset/flshlogo.png" alt=""><b>flsh linux</b><div class="settings-btn" id="lockBtn" role="button" style="margin-right:0">Khóa</div><div class="settings-btn" id="settingsBtn" role="button" style="margin-left:0">Cài đặt</div></div>
 </div>
 </div>
 <input type="file" id="fileInput" accept="image/*">
@@ -203,7 +290,36 @@ const jget=(k,d)=>{try{const v=JSON.parse(ls.get(k));return v==null?d:v}catch(e)
 const num=(k,d,a,b)=>{const v=parseInt(ls.get(k),10);return(v>=a&&v<=b)?v:d};
 const hexOk=s=>/^#[0-9a-f]{6}$/i.test(s);
 const ui=$('ui');
-
+// ===== i18n =====
+let lang=ls.get('linuxweb_lang')==='vi'?'vi':'en';
+const T=(en,vi)=>lang==='vi'?vi:en;
+const EN={'Tìm kiếm...':'Search...','+ Mục':'+ Folder','+ Thêm app':'+ Add app','Khóa':'Lock','Cài đặt':'Settings','Không có kết quả':'No results','Chưa có app nào':'No apps yet','Chọn một mục':'Select a folder','Đổi tên':'Rename','Xóa':'Delete','Đổi đường dẫn':'Change path','Đổi ảnh':'Change icon','Xóa ảnh riêng':'Remove custom icon','Bỏ ghim khỏi taskbar':'Unpin from taskbar','Ghim lên taskbar':'Pin to taskbar','Bỏ khỏi màn hình chính':'Remove from desktop','Thêm ra màn hình chính':'Add to desktop','Bỏ ghim':'Unpin','Xóa khỏi màn hình':'Remove from desktop','Hủy':'Cancel','Đồng ý':'OK','Xác nhận':'Confirm','Hình nền':'Wallpaper','Giao diện':'Appearance','Màn hình':'Display','Tài khoản':'Account','Chọn ảnh':'Choose image','Chọn video':'Choose video','Kiểu hiển thị':'Display mode','Lấp đầy':'Fill','Vừa khung':'Fit','Kéo giãn':'Stretch','Dùng cho cả 4 màn hình':'Use on all 4 screens','Áp dụng':'Apply','Chưa có ảnh':'No image','Hiện giây trên đồng hồ':'Show seconds','Vị trí taskbar':'Taskbar position','Trên':'Top','Dưới':'Bottom','Trái':'Left','Phải':'Right','Màu nền Taskbar':'Taskbar color','Màu chữ Taskbar':'Taskbar text color','Độ mờ Taskbar (%)':'Taskbar opacity (%)','Kích thước biểu tượng (px)':'Icon size (px)','Độ mờ cửa sổ (%)':'Window opacity (%)','Độ phân giải':'Resolution','Gốc của máy':'Native','Kéo dãn lấp đầy màn hình':'Stretch to fill screen','DPI / Tỉ lệ (%)':'DPI / Scale (%)','Tần số quét (Hz)':'Refresh rate (Hz)','Mặc định':'Default','Bật':'On','Tắt':'Off','Đổi':'Change','Mật khẩu':'Password','Đổi mật khẩu':'Change password','Đặt mật khẩu':'Set password','Chạy lại':'Re-run','Yêu cầu đăng nhập khi mở app':'Require login on app start','Chạy lại thiết lập ban đầu':'Re-run initial setup','Ngôn ngữ':'Language','Mới':'New','Mở':'Open','Lưu':'Save','Lưu thành':'Save as','Đóng':'Close','Chưa đặt tên':'Untitled','Thuộc tính':'Properties','+ Thư mục':'+ Folder','Đang tải...':'Loading...','Thư mục trống':'Empty folder','Không truy cập được':'Cannot access','Bộ nhớ trong':'Internal storage','Xong':'Done','Tên mục':'Folder name','Tên app':'App name','Tên mới':'New name','Tên thư mục mới':'New folder name','Tên người dùng':'Username','Tên máy':'Hostname','Mật khẩu hiện tại':'Current password','Mật khẩu mới':'New password','Nhập lại mật khẩu mới':'Repeat new password','Sai mật khẩu.':'Wrong password.','Đã lưu mật khẩu.':'Password saved.','Hai mật khẩu không khớp.':'Passwords do not match.','Mật khẩu tối thiểu 4 ký tự.':'Password must be at least 4 characters.'};
+const trs=s=>{const k=s.trim();if(!k)return s;let t=EN[k],m;if(t===undefined){if(m=k.match(/^Màn hình (\d)$/))t='Screen '+m[1];else if(m=k.match(/^(\d+) mục$/))t=m[1]+' items';else return s}return s.replace(k,t)};
+const TRN=new WeakMap();
+function trNode(n){
+const p=n.parentNode;if(p&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.tagName))return;
+let r=TRN.get(n);
+if(!r||n.data!==r.t){const o=n.data,t=lang==='en'?trs(o):o;r={o,t};TRN.set(n,r);if(n.data!==t)n.data=t}
+else{const t=lang==='en'?trs(r.o):r.o;if(t!==n.data){r.t=t;n.data=t}}
+}
+function trAttr(e,a){
+const v=e.getAttribute(a);if(v==null)return;const k='_o'+a;let r=e[k];
+if(!r||v!==r.t){const t=lang==='en'?trs(v):v;e[k]={o:v,t};if(t!==v)e.setAttribute(a,t)}
+else{const t=lang==='en'?trs(r.o):r.o;if(t!==v){r.t=t;e.setAttribute(a,t)}}
+}
+function i18nAll(r){
+r=r||document.body;const w=document.createTreeWalker(r,4),a=[];let n;while(n=w.nextNode())a.push(n);a.forEach(trNode);
+if(r.nodeType===1){trAttr(r,'placeholder');trAttr(r,'title');r.querySelectorAll('[placeholder],[title]').forEach(e=>{trAttr(e,'placeholder');trAttr(e,'title')})}
+}
+function setLang(l){lang=l==='vi'?'vi':'en';ls.set('linuxweb_lang',lang);document.documentElement.lang=lang;i18nAll()}
+function startI18n(){
+document.documentElement.lang=lang;i18nAll();
+new MutationObserver(ms=>ms.forEach(m=>{
+if(m.type==='characterData')trNode(m.target);
+else if(m.type==='attributes')trAttr(m.target,m.attributeName);
+else m.addedNodes.forEach(n=>{if(n.nodeType===3)trNode(n);else if(n.nodeType===1)i18nAll(n)})
+})).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title']});
+}
 let tb='top';{const t0=ls.get('linuxweb_tb');if(['bottom','left','right'].includes(t0))tb=t0}
 document.body.dataset.tb=tb;
 let dpi=num('linuxweb_dpi',100,70,200),isStretch=ls.get('linuxweb_stretch')==='1',res=ls.get('linuxweb_res')||'auto',hz=num('linuxweb_hz',0,0,240);
@@ -217,148 +333,228 @@ const RES_LABEL={auto:'Gốc của máy','1280x720':'1280×720 (HD)','1600x900':
 if(!(res in RES))res='auto';
 let view={vw:innerWidth,vh:innerHeight,sx:1,sy:1,ox:0,oy:0};
 function applyTheme(){
-  const r=parseInt(tbColor.slice(1,3),16),g=parseInt(tbColor.slice(3,5),16),b=parseInt(tbColor.slice(5,7),16),s=document.documentElement.style;
-  s.setProperty('--tb-bg','rgba('+r+','+g+','+b+','+(tbA/100)+')');s.setProperty('--tb-color',tbText);s.setProperty('--tbh',tbh+'px');
+const r=parseInt(tbColor.slice(1,3),16),g=parseInt(tbColor.slice(3,5),16),b=parseInt(tbColor.slice(5,7),16),s=document.documentElement.style;
+s.setProperty('--tb-bg','rgba('+r+','+g+','+b+','+(tbA/100)+')');s.setProperty('--tb-color',tbText);s.setProperty('--tbh',tbh+'px');
 }
 function applyDpi(){
-  const k=dpi/100,W=innerWidth,H=innerHeight,base=RES[res]||[W,H],w=base[0]/k,h=base[1]/k;
-  let sx=W/w,sy=H/h,ox=0,oy=0;
-  if(!isStretch&&RES[res]){const s=Math.min(sx,sy);sx=sy=s;ox=(W-w*s)/2;oy=(H-h*s)/2}
-  view={vw:w,vh:h,sx,sy,ox,oy};
-  ui.style.width=w+'px';ui.style.height=h+'px';ui.style.transform='translate('+ox+'px,'+oy+'px) scale('+sx+','+sy+')';
+const k=dpi/100,W=innerWidth,H=innerHeight,base=RES[res]||[W,H],w=base[0]/k,h=base[1]/k;
+let sx=W/w,sy=H/h,ox=0,oy=0;
+if(!isStretch&&RES[res]){const s=Math.min(sx,sy);sx=sy=s;ox=(W-w*s)/2;oy=(H-h*s)/2}
+view={vw:w,vh:h,sx,sy,ox,oy};
+ui.style.width=w+'px';ui.style.height=h+'px';ui.style.transform='translate('+ox+'px,'+oy+'px) scale('+sx+','+sy+')';
 }
 const applyOpacity=()=>document.documentElement.style.setProperty('--sp-a',String(spA/100));
 function applyHz(){if(hz&&window.AndroidApp&&typeof window.AndroidApp.setRefreshRate==='function'){try{window.AndroidApp.setRefreshRate(hz)}catch(e){}}}
 function wa(){const W=view.vw,H=view.vh;return{l:tb==='left'?tbh:0,t:tb==='top'?tbh:0,r:tb==='right'?W-tbh:W,b:tb==='bottom'?H-tbh:H}}
 applyTheme();applyDpi();
-
 function openModal(title,body){
-  const bk=E('div','modal-bk'),m=E('div','modal'),h=E('div','modal-h'),x=E('b','modal-x','✕'),bd=E('div','modal-b');
-  h.appendChild(E('span','',title));h.appendChild(x);bd.appendChild(body);m.appendChild(h);m.appendChild(bd);bk.appendChild(m);ui.appendChild(bk);
-  const close=()=>{if(bk.parentNode)bk.remove()};
-  x.onclick=close;bk.addEventListener('pointerdown',e=>{if(e.target===bk)close()});
-  return close;
+const bk=E('div','modal-bk'),m=E('div','modal'),h=E('div','modal-h'),x=E('b','modal-x','✕'),bd=E('div','modal-b');
+h.appendChild(E('span','',title));h.appendChild(x);bd.appendChild(body);m.appendChild(h);m.appendChild(bd);bk.appendChild(m);ui.appendChild(bk);
+const close=()=>{if(bk.parentNode&&!bk.classList.contains('out')){bk.classList.add('out');setTimeout(()=>{if(bk.parentNode)bk.remove()},170)}};
+x.onclick=close;bk.addEventListener('pointerdown',e=>{if(e.target===bk)close()});
+return close;
 }
 function uiAlert(msg,title){
-  const bd=E('div');bd.innerHTML='<div class="dlg-msg"></div><div class="btns"><button class="btn on">OK</button></div>';
-  bd.querySelector('.dlg-msg').textContent=msg;const c=openModal(title||'',bd);bd.querySelector('button').onclick=c;
+const bd=E('div');bd.innerHTML='<div class="dlg-msg"></div><div class="btns"><button class="btn on">OK</button></div>';
+bd.querySelector('.dlg-msg').textContent=msg;const c=openModal(title||'',bd);bd.querySelector('button').onclick=c;
 }
 function uiConfirm(msg,cb){
-  const bd=E('div');bd.innerHTML='<div class="dlg-msg"></div><div class="btns"><button class="btn" data-k="no">Hủy</button><button class="btn danger" data-k="ok">Đồng ý</button></div>';
-  bd.querySelector('.dlg-msg').textContent=msg;const c=openModal('Xác nhận',bd);
-  bd.querySelector('[data-k=no]').onclick=c;bd.querySelector('[data-k=ok]').onclick=()=>{c();cb()};
+const bd=E('div');bd.innerHTML='<div class="dlg-msg"></div><div class="btns"><button class="btn" data-k="no">Hủy</button><button class="btn danger" data-k="ok">Đồng ý</button></div>';
+bd.querySelector('.dlg-msg').textContent=msg;const c=openModal('Xác nhận',bd);
+bd.querySelector('[data-k=no]').onclick=c;bd.querySelector('[data-k=ok]').onclick=()=>{c();cb()};
 }
-function uiPrompt(title,def,cb){
-  const bd=E('div');bd.innerHTML='<input class="dlg-input" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="btns"><button class="btn" data-k="no">Hủy</button><button class="btn on" data-k="ok">OK</button></div>';
-  const inp=bd.querySelector('input');inp.value=def||'';const c=openModal(title,bd);
-  const ok=()=>{const v=inp.value.trim();c();if(v)cb(v)};
-  bd.querySelector('[data-k=ok]').onclick=ok;bd.querySelector('[data-k=no]').onclick=c;
-  inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ok()});
-  setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},60);
+function hsv2hex(h,s,v){
+const f=n=>{const k=(n+h/60)%6,c=v-v*s*Math.max(0,Math.min(k,4-k,1));return Math.round(c*255).toString(16).padStart(2,'0')};
+return '#'+f(5)+f(3)+f(1);
 }
-
+function hex2hsv(x){
+const r=parseInt(x.slice(1,3),16)/255,g=parseInt(x.slice(3,5),16)/255,b=parseInt(x.slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+let h=0;if(d){if(mx===r)h=((g-b)/d+6)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60}
+return[h,mx?d/mx:0,mx];
+}
+function openColorPicker(title,cur,cb){
+let [h,s,v]=hex2hsv(hexOk(cur)?cur:'#ffffff');
+const bd=E('div');
+bd.innerHTML='<div class="cp-sv"><div class="cp-knob"></div></div><input type="range" class="cp-hue" min="0" max="360" step="1"><div class="cp-row"><div class="cp-prev"></div><input class="dlg-input" maxlength="7" autocomplete="off" spellcheck="false"></div><div class="cp-sw"></div><div class="btns"><button class="btn on">Xong</button></div>';
+const sv=bd.querySelector('.cp-sv'),kn=bd.querySelector('.cp-knob'),hue=bd.querySelector('.cp-hue'),pv=bd.querySelector('.cp-prev'),hx=bd.querySelector('.dlg-input'),sw=bd.querySelector('.cp-sw');
+const close=openModal(title,bd);const bk=bd.closest('.modal-bk');if(bk)bk.style.background='rgba(0,0,0,.12)';
+const upd=(emit,keepHex)=>{
+const c=hsv2hex(h,s,v);
+sv.style.backgroundColor='hsl('+h+',100%,50%)';kn.style.left=(s*100)+'%';kn.style.top=((1-v)*100)+'%';hue.value=Math.round(h);pv.style.background=c;
+if(!keepHex)hx.value=c;if(emit)cb(c);
+};
+const pick=e=>{const r=sv.getBoundingClientRect();s=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));v=1-Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));upd(true)};
+let on=false;
+sv.addEventListener('pointerdown',e=>{on=true;try{sv.setPointerCapture(e.pointerId)}catch(er){}pick(e)});
+sv.addEventListener('pointermove',e=>{if(on)pick(e)});
+['pointerup','pointercancel'].forEach(ev=>sv.addEventListener(ev,()=>{on=false}));
+hue.addEventListener('input',()=>{h=Number(hue.value);upd(true)});
+hx.addEventListener('keydown',e=>e.stopPropagation());
+hx.addEventListener('input',()=>{let t=hx.value.trim();if(t[0]!=='#')t='#'+t;if(hexOk(t)){[h,s,v]=hex2hsv(t);upd(true,true)}});
+['#ffffff','#000000','#9ca3af','#374151','#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#6366f1','#a855f7','#ec4899','#60a5fa','#34d399','#fbbf24'].forEach(c=>{
+const d=E('div');d.style.background=c;d.onclick=()=>{[h,s,v]=hex2hsv(c);upd(true)};sw.appendChild(d);
+});
+bd.querySelector('.btn').onclick=close;
+upd(false);
+}
+function uiPrompt(title,def,cb,type){
+const bd=E('div');bd.innerHTML='<input class="dlg-input" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="btns"><button class="btn" data-k="no">Hủy</button><button class="btn on" data-k="ok">OK</button></div>';
+const inp=bd.querySelector('input');if(type)inp.type=type;inp.value=def||'';const c=openModal(title,bd);
+const ok=()=>{const v=inp.value.trim();c();if(v)cb(v)};
+bd.querySelector('[data-k=ok]').onclick=ok;bd.querySelector('[data-k=no]').onclick=c;
+inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ok()});
+setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},60);
+}
 let ctxEl=null;
 function closeCtx(){if(ctxEl){ctxEl.remove();ctxEl=null}}
 function showCtx(x,y,items){
-  closeCtx();const m=E('div','ctx-menu');
-  items.forEach(it=>{const r=E('div','ctx-item'+(it.danger?' danger':''),it.label);r.addEventListener('click',e=>{e.stopPropagation();closeCtx();it.action()});m.appendChild(r)});
-  ui.appendChild(m);ctxEl=m;
-  const lx=(x-view.ox)/view.sx,ly=(y-view.oy)/view.sy;m.style.left=Math.max(0,Math.min(lx,view.vw-m.offsetWidth-4))+'px';m.style.top=Math.max(0,Math.min(ly,view.vh-m.offsetHeight-4))+'px';
+closeCtx();const m=E('div','ctx-menu');
+items.forEach(it=>{const r=E('div','ctx-item'+(it.danger?' danger':''),it.label);r.addEventListener('click',e=>{e.stopPropagation();closeCtx();it.action()});m.appendChild(r)});
+ui.appendChild(m);ctxEl=m;
+const lx=(x-view.ox)/view.sx,ly=(y-view.oy)/view.sy;m.style.left=Math.max(0,Math.min(lx,view.vw-m.offsetWidth-4))+'px';m.style.top=Math.max(0,Math.min(ly,view.vh-m.offsetHeight-4))+'px';
 }
 document.addEventListener('click',closeCtx);
+document.addEventListener('pointerdown',e=>{if(ctxEl&&!ctxEl.contains(e.target))closeCtx()},true);
 document.addEventListener('contextmenu',e=>{if(!e.target.closest('textarea,input'))e.preventDefault()});
 function longPress(el,cb){
-  let t=null,sx=0,sy=0,fired=false;const cancel=()=>{clearTimeout(t);t=null};
-  el.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;fired=false;sx=e.clientX;sy=e.clientY;cancel();t=setTimeout(()=>{fired=true;cb(e.clientX,e.clientY)},500)});
-  el.addEventListener('pointermove',e=>{if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>10)cancel()});
-  ['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,cancel));
-  el.addEventListener('click',e=>{if(fired){e.stopImmediatePropagation();e.preventDefault();fired=false}},true);
+let t=null,sx=0,sy=0,fired=false;const cancel=()=>{clearTimeout(t);t=null};
+el.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;fired=false;sx=e.clientX;sy=e.clientY;cancel();t=setTimeout(()=>{fired=true;cb(e.clientX,e.clientY)},500)});
+el.addEventListener('pointermove',e=>{if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>10)cancel()});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>el.addEventListener(ev,cancel));
+el.addEventListener('click',e=>{if(fired){e.stopImmediatePropagation();e.preventDefault();fired=false}},true);
 }
 function ctxOn(el,cb){el.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();cb(e.clientX,e.clientY)});longPress(el,cb)}
-
+let dragging=false;
+document.addEventListener('touchmove',e=>{if(dragging&&e.cancelable)e.preventDefault()},{passive:false});
+function holdDrag(el,o){
+let t=null,sx=0,sy=0,id=null,lifted=false,moved=false,suppress=false;
+const cancel=()=>{clearTimeout(t);t=null};
+el.addEventListener('pointerdown',e=>{
+suppress=false;if(e.button!==undefined&&e.button!==0)return;
+cancel();sx=e.clientX;sy=e.clientY;id=e.pointerId;lifted=false;moved=false;
+t=setTimeout(()=>{t=null;lifted=true;dragging=true;suppress=true;try{el.setPointerCapture(id)}catch(er){}o.onLift()},380);
+});
+el.addEventListener('pointermove',e=>{
+if(e.pointerId!==id)return;
+const d=Math.hypot(e.clientX-sx,e.clientY-sy);
+if(!lifted){if(t&&d>10)cancel();return}
+if(!moved&&d>6)moved=true;
+if(moved)o.onMove(e,e.clientX-sx,e.clientY-sy);
+});
+el.addEventListener('pointerleave',()=>{if(!lifted)cancel()});
+const end=e=>{
+cancel();if(!lifted)return;
+lifted=false;dragging=false;try{el.releasePointerCapture(id)}catch(er){}
+if(e.type==='pointercancel'){o.onDrop(false);return}
+if(moved)o.onDrop(true);else{o.onDrop(false);o.onMenu(e.clientX,e.clientY)}
+};
+el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+el.addEventListener('click',e=>{if(suppress){e.stopImmediatePropagation();e.preventDefault();suppress=false}},true);
+el.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();if(lifted||suppress)return;o.onMenu(e.clientX,e.clientY)});
+}
+const moveItem=(arr,from,to)=>{arr.splice(to,0,arr.splice(from,1)[0])};
+function reorderable(d,listEl,from,onMove,menu){
+let startScroll=0,newPos=from,others=[];
+holdDrag(d,{
+onLift(){startScroll=listEl.scrollTop;newPos=from;others=[...listEl.querySelectorAll('[data-mv]')].filter(x=>x!==d);d.classList.add('lifted')},
+onMove(e,dx,dy){
+const r=listEl.getBoundingClientRect();
+if(e.clientY<r.top+28)listEl.scrollTop-=8;else if(e.clientY>r.bottom-44)listEl.scrollTop+=8;
+d.style.transform='translateY('+(dy/view.sy+listEl.scrollTop-startScroll)+'px) scale(1.04)';
+const b=d.getBoundingClientRect(),cy=b.top+b.height/2;let n=0;
+others.forEach(o=>{const ob=o.getBoundingClientRect();if(ob.top+ob.height/2<cy)n++});
+newPos=n;
+others.forEach((o,k)=>{o.classList.toggle('drop-before',k===n);o.classList.toggle('drop-after',n===others.length&&k===others.length-1)});
+},
+onDrop(moved){
+d.classList.remove('lifted');d.style.transform='';others.forEach(o=>o.classList.remove('drop-before','drop-after'));
+if(moved&&newPos!==from)onMove(newPos);
+},
+onMenu:menu
+});
+}
 let zTop=20000,cascade=0;const windows=[],WMW=300,WMH=220;
 function renderWinBar(){
-  const bar=$('winBar');bar.innerHTML='';let topZ=0;
-  windows.forEach(w=>{if(w.ws===ws&&w.isOpen())topZ=Math.max(topZ,parseInt(w.el.style.zIndex)||0)});
-  windows.forEach(w=>{
-    if(w.ws!==ws)return;
-    const on=w.isOpen()&&(parseInt(w.el.style.zIndex)||0)===topZ;
-    const it=E('div','pinned-item'+(on?' win-on':''),w.title);
-    it.addEventListener('click',e=>{e.stopPropagation();if(!w.isOpen())w.show();else if(on)w.min();else{w.front();renderWinBar()}});
-    bar.appendChild(it);
-  });
+const bar=$('winBar');bar.innerHTML='';let topZ=0;
+windows.forEach(w=>{if(w.ws===ws&&w.isOpen())topZ=Math.max(topZ,parseInt(w.el.style.zIndex)||0)});
+windows.forEach(w=>{
+if(w.ws!==ws)return;
+const on=w.isOpen()&&(parseInt(w.el.style.zIndex)||0)===topZ;
+const it=E('div','pinned-item'+(on?' win-on':''),w.title);
+it.addEventListener('click',e=>{e.stopPropagation();if(!w.isOpen())w.show();else if(on)w.min();else{w.front();renderWinBar()}});
+bar.appendChild(it);
+});
 }
 function createWindow(o){
-  const w=E('div','sp');
-  w.innerHTML='<div class="sp-head"><span class="sp-t"></span><div class="sp-wbtns"><div class="sp-wbtn" data-a="min">─</div><div class="sp-wbtn" data-a="max">☐</div><div class="sp-wbtn sp-x" data-a="close">✕</div></div></div><div class="sp-body"></div>'+['tl','tr','bl','br','t','b','l','r'].map(c=>'<div class="sp-h" data-c="'+c+'"></div>').join('');
-  w.querySelector('.sp-t').textContent=o.title;
-  w.querySelector('.sp-body').appendChild(o.body);
-  ui.appendChild(w);
-  const A=wa(),AW=A.r-A.l,AH=A.b-A.t,off=(cascade++%5)*26;
-  const st={w:Math.min(AW,o.w||Math.round(Math.min(AW*.9,760))),h:Math.min(AH,o.h||Math.round(Math.min(AH*.85,520))),max:!!o.max};
-  st.x=A.l+Math.round((AW-st.w)/2)+off-52;st.y=A.t+Math.round((AH-st.h)/2)+off-52;
-  let saved=o.max?{x:st.x,y:st.y,w:st.w,h:st.h}:null,open=true,closed=false,busy=false;
-  const handle={el:w,title:o.title,ws:ws,isOpen:()=>open&&!closed,refresh:apply,front:()=>{zTop++;w.style.zIndex=zTop},close:doClose,min:doMin,
-    show(){open=true;apply();handle.front();anim('a-open',270);renderWinBar()}};
-  function clamp(){const a=wa();st.w=Math.max(WMW,Math.min(st.w,a.r-a.l));st.h=Math.max(WMH,Math.min(st.h,a.b-a.t));st.x=Math.max(a.l,Math.min(st.x,a.r-st.w));st.y=Math.max(a.t,Math.min(st.y,a.b-st.h))}
-  function apply(){
-    const a=wa(),s=w.style;
-    if(st.max){s.left=a.l+'px';s.top=a.t+'px';s.width=(a.r-a.l)+'px';s.height=(a.b-a.t)+'px'}
-    else{clamp();s.left=st.x+'px';s.top=st.y+'px';s.width=st.w+'px';s.height=st.h+'px'}
-    w.classList.toggle('max',st.max);
-    w.querySelector('[data-a=max]').textContent=st.max?'❐':'☐';
-    w.classList.toggle('show',open&&!closed&&handle.ws===ws);
-  }
-  function anim(cls,ms){['a-open','a-min'].forEach(c=>w.classList.remove(c));void w.offsetWidth;w.classList.add(cls);setTimeout(()=>w.classList.remove(cls),ms)}
-  function doMin(){if(busy||!open||closed)return;busy=true;w.classList.add('a-min');setTimeout(()=>{open=false;busy=false;apply();w.classList.remove('a-min');renderWinBar()},230)}
-  function doClose(){
-    if(closed)return;closed=true;w.classList.add('closing');
-    setTimeout(()=>{try{w.remove()}catch(e){}const i=windows.indexOf(handle);if(i>=0)windows.splice(i,1);renderWinBar()},200);
-    if(o.onClose){try{o.onClose()}catch(e){}}
-  }
-  function toggleMax(){
-    w.classList.add('animsize');
-    if(st.max){if(saved){st.x=saved.x;st.y=saved.y;st.w=saved.w;st.h=saved.h}st.max=false}
-    else{saved={x:st.x,y:st.y,w:st.w,h:st.h};st.max=true}
-    apply();setTimeout(()=>w.classList.remove('animsize'),300);
-  }
-  const wb=w.querySelector('.sp-wbtns');
-  wb.addEventListener('pointerdown',e=>e.stopPropagation());
-  wb.addEventListener('click',e=>{
-    e.stopPropagation();const b=e.target.closest('.sp-wbtn');if(!b)return;
-    const a=b.dataset.a;if(a==='close')doClose();else if(a==='min')doMin();else if(a==='max')toggleMax();
-  });
-  const head=w.querySelector('.sp-head');let drag=null;
-  head.addEventListener('pointerdown',e=>{
-    if(st.max||e.target.closest('.sp-wbtns')||(e.button!==undefined&&e.button!==0))return;
-    drag={sx:e.clientX,sy:e.clientY,ox:st.x,oy:st.y,id:e.pointerId};try{head.setPointerCapture(e.pointerId)}catch(er){}
-  });
-  head.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;st.x=drag.ox+(e.clientX-drag.sx)/view.sx;st.y=drag.oy+(e.clientY-drag.sy)/view.sy;apply()});
-  const endDrag=()=>{drag=null};head.addEventListener('pointerup',endDrag);head.addEventListener('pointercancel',endDrag);
-  head.addEventListener('dblclick',toggleMax);
-  w.querySelectorAll('.sp-h').forEach(h=>{
-    let rz=null;
-    h.addEventListener('pointerdown',e=>{
-      if(st.max||(e.button!==undefined&&e.button!==0))return;e.stopPropagation();handle.front();
-      rz={c:h.dataset.c,sx:e.clientX,sy:e.clientY,x:st.x,y:st.y,w:st.w,h:st.h,id:e.pointerId};try{h.setPointerCapture(e.pointerId)}catch(er){}
-    });
-    h.addEventListener('pointermove',e=>{
-      if(!rz||e.pointerId!==rz.id)return;
-      const dx=(e.clientX-rz.sx)/view.sx,dy=(e.clientY-rz.sy)/view.sy,a=wa();let x=rz.x,y=rz.y,ww=rz.w,hh=rz.h;
-      if(rz.c.includes('r'))ww=Math.min(Math.max(WMW,rz.w+dx),a.r-rz.x);
-      if(rz.c.includes('l')){ww=Math.max(WMW,rz.w-dx);x=rz.x+rz.w-ww;if(x<a.l){x=a.l;ww=rz.x+rz.w-a.l}}
-      if(rz.c.includes('b'))hh=Math.min(Math.max(WMH,rz.h+dy),a.b-rz.y);
-      if(rz.c.includes('t')){hh=Math.max(WMH,rz.h-dy);y=rz.y+rz.h-hh;if(y<a.t){y=a.t;hh=rz.y+rz.h-a.t}}
-      st.x=x;st.y=y;st.w=ww;st.h=hh;apply();
-    });
-    const end=()=>{rz=null};h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
-  });
-  w.addEventListener('pointerdown',()=>{handle.front();setTimeout(renderWinBar,0)});
-  windows.push(handle);handle.front();apply();anim('a-open',270);renderWinBar();
-  return handle;
+const w=E('div','sp');
+w.innerHTML='<div class="sp-head"><span class="sp-t"></span><div class="sp-wbtns"><div class="sp-wbtn" data-a="min">─</div><div class="sp-wbtn" data-a="max">☐</div><div class="sp-wbtn sp-x" data-a="close">✕</div></div></div><div class="sp-body"></div>'+['tl','tr','bl','br','t','b','l','r'].map(c=>'<div class="sp-h" data-c="'+c+'"></div>').join('');
+w.querySelector('.sp-t').textContent=o.title;
+w.querySelector('.sp-body').appendChild(o.body);
+ui.appendChild(w);
+const A=wa(),AW=A.r-A.l,AH=A.b-A.t,off=(cascade++%5)*26;
+const st={w:Math.min(AW,o.w||Math.round(Math.min(AW*.9,760))),h:Math.min(AH,o.h||Math.round(Math.min(AH*.85,520))),max:!!o.max};
+st.x=A.l+Math.round((AW-st.w)/2)+off-52;st.y=A.t+Math.round((AH-st.h)/2)+off-52;
+let saved=o.max?{x:st.x,y:st.y,w:st.w,h:st.h}:null,open=true,closed=false,busy=false;
+const handle={el:w,title:o.title,ws:ws,isOpen:()=>open&&!closed,refresh:apply,front:()=>{zTop++;w.style.zIndex=zTop},close:doClose,min:doMin,
+show(){open=true;apply();handle.front();anim('a-open',270);renderWinBar()}};
+function clamp(){const a=wa();st.w=Math.max(WMW,Math.min(st.w,a.r-a.l));st.h=Math.max(WMH,Math.min(st.h,a.b-a.t));st.x=Math.max(a.l,Math.min(st.x,a.r-st.w));st.y=Math.max(a.t,Math.min(st.y,a.b-st.h))}
+function apply(){
+const a=wa(),s=w.style;
+if(st.max){s.left=a.l+'px';s.top=a.t+'px';s.width=(a.r-a.l)+'px';s.height=(a.b-a.t)+'px'}
+else{clamp();s.left=st.x+'px';s.top=st.y+'px';s.width=st.w+'px';s.height=st.h+'px'}
+w.classList.toggle('max',st.max);
+w.querySelector('[data-a=max]').textContent=st.max?'❐':'☐';
+w.classList.toggle('show',open&&!closed&&handle.ws===ws);
+}
+function anim(cls,ms){['a-open','a-min'].forEach(c=>w.classList.remove(c));void w.offsetWidth;w.classList.add(cls);setTimeout(()=>w.classList.remove(cls),ms)}
+function doMin(){if(busy||!open||closed)return;busy=true;w.classList.add('a-min');setTimeout(()=>{open=false;busy=false;apply();w.classList.remove('a-min');renderWinBar()},230)}
+function doClose(){
+if(closed)return;closed=true;w.classList.add('closing');
+setTimeout(()=>{try{w.remove()}catch(e){}const i=windows.indexOf(handle);if(i>=0)windows.splice(i,1);renderWinBar()},200);
+if(o.onClose){try{o.onClose()}catch(e){}}
+}
+function toggleMax(){
+w.classList.add('animsize');
+if(st.max){if(saved){st.x=saved.x;st.y=saved.y;st.w=saved.w;st.h=saved.h}st.max=false}
+else{saved={x:st.x,y:st.y,w:st.w,h:st.h};st.max=true}
+apply();setTimeout(()=>w.classList.remove('animsize'),300);
+}
+const wb=w.querySelector('.sp-wbtns');
+wb.addEventListener('pointerdown',e=>e.stopPropagation());
+wb.addEventListener('click',e=>{
+e.stopPropagation();const b=e.target.closest('.sp-wbtn');if(!b)return;
+const a=b.dataset.a;if(a==='close')doClose();else if(a==='min')doMin();else if(a==='max')toggleMax();
+});
+const head=w.querySelector('.sp-head');let drag=null;
+head.addEventListener('pointerdown',e=>{
+if(st.max||e.target.closest('.sp-wbtns')||(e.button!==undefined&&e.button!==0))return;
+drag={sx:e.clientX,sy:e.clientY,ox:st.x,oy:st.y,id:e.pointerId};try{head.setPointerCapture(e.pointerId)}catch(er){}
+});
+head.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;st.x=drag.ox+(e.clientX-drag.sx)/view.sx;st.y=drag.oy+(e.clientY-drag.sy)/view.sy;apply()});
+const endDrag=()=>{drag=null};head.addEventListener('pointerup',endDrag);head.addEventListener('pointercancel',endDrag);
+head.addEventListener('dblclick',toggleMax);
+w.querySelectorAll('.sp-h').forEach(h=>{
+let rz=null;
+h.addEventListener('pointerdown',e=>{
+if(st.max||(e.button!==undefined&&e.button!==0))return;e.stopPropagation();handle.front();
+rz={c:h.dataset.c,sx:e.clientX,sy:e.clientY,x:st.x,y:st.y,w:st.w,h:st.h,id:e.pointerId};try{h.setPointerCapture(e.pointerId)}catch(er){}
+});
+h.addEventListener('pointermove',e=>{
+if(!rz||e.pointerId!==rz.id)return;
+const dx=(e.clientX-rz.sx)/view.sx,dy=(e.clientY-rz.sy)/view.sy,a=wa();let x=rz.x,y=rz.y,ww=rz.w,hh=rz.h;
+if(rz.c.includes('r'))ww=Math.min(Math.max(WMW,rz.w+dx),a.r-rz.x);
+if(rz.c.includes('l')){ww=Math.max(WMW,rz.w-dx);x=rz.x+rz.w-ww;if(x<a.l){x=a.l;ww=rz.x+rz.w-a.l}}
+if(rz.c.includes('b'))hh=Math.min(Math.max(WMH,rz.h+dy),a.b-rz.y);
+if(rz.c.includes('t')){hh=Math.max(WMH,rz.h-dy);y=rz.y+rz.h-hh;if(y<a.t){y=a.t;hh=rz.y+rz.h-a.t}}
+st.x=x;st.y=y;st.w=ww;st.h=hh;apply();
+});
+const end=()=>{rz=null};h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
+});
+w.addEventListener('pointerdown',()=>{handle.front();setTimeout(renderWinBar,0)});
+windows.push(handle);handle.front();apply();anim('a-open',270);renderWinBar();
+return handle;
 }
 const refreshWindows=()=>windows.forEach(w=>w.refresh());
-
 const SH=window.Shell&&window.Shell.start?window.Shell:null;
 const HOME=SH?String(SH.home()):'/';
 const shQ=s=>"'"+String(s).replace(/'/g,"'\\''")+"'";
@@ -366,97 +562,100 @@ const b64=s=>btoa(unescape(encodeURIComponent(s)));
 const clean=t=>t.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g,'').replace(/\r/g,'');
 const jobs={};let jid=0;
 window.__sh=function(id,d,done,code){
-  const j=jobs[id];if(!j)return;
-  if(d){const bin=atob(d),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);j.onData(j.dec.decode(u,{stream:true}))}
-  if(done){delete jobs[id];j.onEnd(code)}
+const j=jobs[id];if(!j)return;
+if(d){const bin=atob(d),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);j.onData(j.dec.decode(u,{stream:true}))}
+if(done){delete jobs[id];j.onEnd(code)}
 };
 function sh(cmd,cwd,onData,onEnd){const id='j'+(++jid);jobs[id]={dec:new TextDecoder(),onData:onData||(()=>{}),onEnd:onEnd||(()=>{})};SH.start(id,cmd,cwd||HOME);return id}
 const shRun=(cmd,cwd)=>new Promise(r=>{if(!SH)return r({out:'',code:-1});let o='';sh(cmd,cwd,t=>{o+=t},c=>r({out:o,code:c}))});
 const readFile=p=>shRun('s=$(wc -c < '+shQ(p)+'); if [ "${s:-0}" -gt 1048576 ]; then echo __BIG__; exit 2; fi; cat '+shQ(p));
 async function writeFile(p,text){
-  const data=b64(text),tmp=p+'.b64tmp';let r=await shRun(': > '+shQ(tmp));if(r.code)return false;
-  for(let i=0;i<data.length;i+=50000){r=await shRun('printf %s '+shQ(data.slice(i,i+50000))+' >> '+shQ(tmp));if(r.code)return false}
-  r=await shRun('base64 -d < '+shQ(tmp)+' > '+shQ(p)+'; c=$?; rm -f '+shQ(tmp)+'; exit $c');return r.code===0;
+const data=b64(text),tmp=p+'.b64tmp';let r=await shRun(': > '+shQ(tmp));if(r.code)return false;
+for(let i=0;i<data.length;i+=50000){r=await shRun('printf %s '+shQ(data.slice(i,i+50000))+' >> '+shQ(tmp));if(r.code)return false}
+r=await shRun('base64 -d < '+shQ(tmp)+' > '+shQ(p)+'; c=$?; rm -f '+shQ(tmp)+'; exit $c');return r.code===0;
 }
-
 const SVG_DIR='<svg viewBox="0 0 48 48"><path d="M4 12a3 3 0 0 1 3-3h11l4 4h19a3 3 0 0 1 3 3v22a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#3b82c4"/><path d="M4 19h40v18a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#5aa7ec"/></svg>';
 const SVG_FILE='<svg viewBox="0 0 48 48"><path d="M10 4h20l10 10v28a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="#e5e7eb"/><path d="M30 4v10h10z" fill="#9ca3af"/><path d="M14 24h20M14 30h20M14 36h14" stroke="#9ca3af" stroke-width="2"/></svg>';
-
 function openEditor(path,content){
-  const b=E('div','ed');
-  b.innerHTML='<div class="ed-menu"></div><div class="ed-tab"></div><textarea spellcheck="false" autocapitalize="off"></textarea><div class="ed-st"><span class="pos"></span><span>UTF-8</span></div>';
-  const menu=b.querySelector('.ed-menu'),tab=b.querySelector('.ed-tab'),ta=b.querySelector('textarea'),pos=b.querySelector('.pos');
-  let cur=path&&path.startsWith('/')?path:null,win=null;ta.value=content||'';
-  ta.addEventListener('keydown',e=>e.stopPropagation());
-  function upd(){
-    tab.textContent=cur||'Chưa đặt tên';const v=ta.value.slice(0,ta.selectionStart);pos.textContent='Dòng '+v.split('\n').length+', Cột '+(v.length-v.lastIndexOf('\n'));
-    if(win&&cur){win.title=cur.split('/').pop();win.el.querySelector('.sp-t').textContent=win.title;renderWinBar()}
-  }
-  async function doSave(){if(!SH)return;tab.textContent='Đang lưu...';const ok=await writeFile(cur,ta.value);tab.textContent=ok?cur+' — đã lưu':cur+' — lỗi lưu'}
-  const saveAs=()=>uiPrompt('Lưu thành (đường dẫn đầy đủ)',cur||HOME+'/new.txt',p=>{if(!p.startsWith('/'))p=HOME+'/'+p;cur=p;doSave().then(upd)});
-  [['Mới',()=>{ta.value='';cur=null;upd()}],
-   ['Mở',()=>uiPrompt('Đường dẫn file',HOME+'/',async p=>{const r=await readFile(p);if(r.code)return;ta.value=r.out;cur=p;upd()})],
-   ['Lưu',()=>{cur?doSave():saveAs()}],['Lưu thành',saveAs],['Đóng',()=>win.close()]
-  ].forEach(([l,f])=>{const m=E('div','ed-mi',l);m.addEventListener('click',e=>{e.stopPropagation();f()});menu.appendChild(m)});
-  ['input','keyup','click','select'].forEach(ev=>ta.addEventListener(ev,upd));
-  win=createWindow({title:cur?cur.split('/').pop():'Text Editor',body:b});upd();
+const b=E('div','ed');
+b.innerHTML='<div class="ed-menu"></div><div class="ed-tab"></div><textarea spellcheck="false" autocapitalize="off"></textarea><div class="ed-st"><span class="pos"></span><span>UTF-8</span></div>';
+const menu=b.querySelector('.ed-menu'),tab=b.querySelector('.ed-tab'),ta=b.querySelector('textarea'),pos=b.querySelector('.pos');
+let cur=path&&path.startsWith('/')?path:null,win=null;ta.value=content||'';
+ta.addEventListener('keydown',e=>e.stopPropagation());
+function upd(){
+tab.textContent=cur||'Chưa đặt tên';const v=ta.value.slice(0,ta.selectionStart);pos.textContent='Dòng '+v.split('\n').length+', Cột '+(v.length-v.lastIndexOf('\n'));
+if(win&&cur){win.title=cur.split('/').pop();win.el.querySelector('.sp-t').textContent=win.title;renderWinBar()}
 }
-
+async function doSave(){if(!SH)return;tab.textContent='Đang lưu...';const ok=await writeFile(cur,ta.value);tab.textContent=ok?cur+' — đã lưu':cur+' — lỗi lưu'}
+const saveAs=()=>uiPrompt('Lưu thành (đường dẫn đầy đủ)',cur||HOME+'/new.txt',p=>{if(!p.startsWith('/'))p=HOME+'/'+p;cur=p;doSave().then(upd)});
+[['Mới',()=>{ta.value='';cur=null;upd()}],
+['Mở',()=>uiPrompt('Đường dẫn file',HOME+'/',async p=>{const r=await readFile(p);if(r.code)return;ta.value=r.out;cur=p;upd()})],
+['Lưu',()=>{cur?doSave():saveAs()}],['Lưu thành',saveAs],['Đóng',()=>win.close()]
+].forEach(([l,f])=>{const m=E('div','ed-mi',l);m.addEventListener('click',e=>{e.stopPropagation();f()});menu.appendChild(m)});
+['input','keyup','click','select'].forEach(ev=>ta.addEventListener(ev,upd));
+win=createWindow({title:cur?cur.split('/').pop():'Text Editor',body:b});upd();
+}
 function openFileManager(start){
-  const b=E('div','fm');
-  b.innerHTML='<div class="fm-tb"><button data-a="back">←</button><button data-a="fwd">→</button><button data-a="up">↑</button><button data-a="home">⌂</button><div class="fm-path"></div><button data-a="new">+ Thư mục</button></div><div class="fm-main"><div class="fm-side"></div><div class="fm-grid"></div></div><div class="fm-st"><span class="n"></span><span class="c"></span></div>';
-  const pathEl=b.querySelector('.fm-path'),side=b.querySelector('.fm-side'),grid=b.querySelector('.fm-grid'),sn=b.querySelector('.n'),sc=b.querySelector('.c');
-  let cwd=start||HOME,hist=[cwd],hi=0,tok=0;
-  const places=[['Home',HOME],['Bộ nhớ trong','/sdcard'],['Download','/sdcard/Download'],['Pictures','/sdcard/Pictures'],['/storage','/storage'],['File System','/']];
-  const q=n=>shQ('./'+n);
-  const LS='[ -r . ] && [ -x . ] || { echo "!"; exit 1; }\nfor f in * .[!.]* ..?*; do [ -e "$f" ] || [ -L "$f" ] || continue; if [ -d "$f" ]; then echo "d$f"; else echo "f$f"; fi; done';
-  const msg=t=>{grid.innerHTML='';grid.appendChild(E('div','fm-empty',t))};
-  async function paint(){
-    b.querySelector('[data-a=back]').disabled=hi<=0;b.querySelector('[data-a=fwd]').disabled=hi>=hist.length-1;
-    side.innerHTML='';places.forEach(([l,p])=>{const d=E('div','fm-sitem'+(p===cwd?' active':''));d.innerHTML=SVG_DIR;d.appendChild(E('span','',l));d.onclick=()=>go(p);side.appendChild(d)});
-    pathEl.innerHTML='';const root=E('span','crumb','/');root.onclick=()=>go('/');pathEl.appendChild(root);
-    let acc='';const parts=cwd.split('/').filter(Boolean);
-    parts.forEach((p,i)=>{acc+='/'+p;pathEl.appendChild(E('span','',' › '));const c=E('span','crumb'+(i===parts.length-1?' last':''),p),t=acc;c.onclick=()=>go(t);pathEl.appendChild(c)});
-    pathEl.scrollLeft=pathEl.scrollWidth;sc.textContent=cwd;
-    if(!SH){sn.textContent='';grid.innerHTML='';return}
-    const my=++tok;msg('Đang tải...');const r=await shRun(LS,cwd);if(my!==tok)return;
-    if(r.code!==0){sn.textContent='';return msg('Không truy cập được')}
-    const ents=r.out.split('\n').filter(x=>x.length>1).map(l=>({dir:l[0]==='d',name:l.slice(1)})).sort((x,y)=>x.dir!==y.dir?(x.dir?-1:1):x.name.localeCompare(y.name));
-    grid.innerHTML='';if(!ents.length)msg('Thư mục trống');
-    ents.forEach(({dir,name})=>{
-      const it=E('div','fm-it');it.innerHTML=dir?SVG_DIR:SVG_FILE;it.appendChild(E('span','',name));
-      const open=async()=>{if(dir)return go(cwd==='/'?'/'+name:cwd+'/'+name);const p=(cwd==='/'?'':cwd)+'/'+name,r=await readFile(p);if(!r.code)openEditor(p,r.out)};
-      it.addEventListener('click',open);
-      ctxOn(it,(x,y)=>showCtx(x,y,[
-        {label:'Mở',action:open},
-        {label:'Đổi tên',action:()=>uiPrompt('Tên mới',name,async nn=>{if(nn===name||nn.includes('/'))return;await shRun('mv '+q(name)+' '+q(nn),cwd);paint()})},
-        {label:'Xóa',danger:true,action:()=>uiConfirm('Xóa "'+name+'"?',async()=>{await shRun('rm -rf '+q(name),cwd);paint()})},
-        {label:'Thuộc tính',action:async()=>{const r=await shRun('ls -ld '+q(name),cwd);uiAlert(clean(r.out).trim()||name,'Thuộc tính')}}
-      ]));
-      grid.appendChild(it);
-    });
-    sn.textContent=ents.length+' mục';
-  }
-  function go(p){cwd=p;if(hist[hi]!==p){hist=hist.slice(0,hi+1);hist.push(p);hi=hist.length-1}paint()}
-  b.querySelector('.fm-tb').addEventListener('click',e=>{
-    const btn=e.target.closest('button');if(!btn||btn.disabled)return;const a=btn.dataset.a;
-    if(a==='back'&&hi>0){hi--;cwd=hist[hi];paint()}
-    else if(a==='fwd'&&hi<hist.length-1){hi++;cwd=hist[hi];paint()}
-    else if(a==='up')go(cwd.replace(/\/[^/]+$/,'')||'/');
-    else if(a==='home')go(HOME);
-    else if(a==='new')uiPrompt('Tên thư mục mới','',async nn=>{if(nn.includes('/'))return;await shRun('mkdir '+q(nn),cwd);paint()});
-  });
-  paint();createWindow({title:'File Manager',body:b});
+const b=E('div','fm');
+b.innerHTML='<div class="fm-tb"><button data-a="back">←</button><button data-a="fwd">→</button><button data-a="up">↑</button><button data-a="home">⌂</button><div class="fm-path"></div><button data-a="new">+ Thư mục</button></div><div class="fm-main"><div class="fm-side"></div><div class="fm-grid"></div></div><div class="fm-st"><span class="n"></span><span class="c"></span></div>';
+const pathEl=b.querySelector('.fm-path'),side=b.querySelector('.fm-side'),grid=b.querySelector('.fm-grid'),sn=b.querySelector('.n'),sc=b.querySelector('.c');
+let cwd=start||HOME,hist=[cwd],hi=0,tok=0;
+const places=[['Home',HOME],['Bộ nhớ trong','/sdcard'],['Download','/sdcard/Download'],['Pictures','/sdcard/Pictures'],['/storage','/storage'],['File System','/']];
+const q=n=>shQ('./'+n);
+const LS='[ -r . ] && [ -x . ] || { echo "!"; exit 1; }\nfor f in * .[!.]* ..?*; do [ -e "$f" ] || [ -L "$f" ] || continue; if [ -d "$f" ]; then echo "d$f"; else echo "f$f"; fi; done';
+const msg=t=>{grid.innerHTML='';grid.appendChild(E('div','fm-empty',t))};
+async function paint(){
+b.querySelector('[data-a=back]').disabled=hi<=0;b.querySelector('[data-a=fwd]').disabled=hi>=hist.length-1;
+side.innerHTML='';places.forEach(([l,p])=>{const d=E('div','fm-sitem'+(p===cwd?' active':''));d.innerHTML=SVG_DIR;d.appendChild(E('span','',l));d.onclick=()=>go(p);side.appendChild(d)});
+pathEl.innerHTML='';const root=E('span','crumb','/');root.onclick=()=>go('/');pathEl.appendChild(root);
+let acc='';const parts=cwd.split('/').filter(Boolean);
+parts.forEach((p,i)=>{acc+='/'+p;pathEl.appendChild(E('span','',' › '));const c=E('span','crumb'+(i===parts.length-1?' last':''),p),t=acc;c.onclick=()=>go(t);pathEl.appendChild(c)});
+pathEl.scrollLeft=pathEl.scrollWidth;sc.textContent=cwd;
+if(!SH){sn.textContent='';grid.innerHTML='';return}
+const my=++tok;msg('Đang tải...');const r=await shRun(LS,cwd);if(my!==tok)return;
+if(r.code!==0){sn.textContent='';return msg('Không truy cập được')}
+const ents=r.out.split('\n').filter(x=>x.length>1).map(l=>({dir:l[0]==='d',name:l.slice(1)})).sort((x,y)=>x.dir!==y.dir?(x.dir?-1:1):x.name.localeCompare(y.name));
+grid.innerHTML='';if(!ents.length)msg('Thư mục trống');
+ents.forEach(({dir,name})=>{
+const it=E('div','fm-it');it.innerHTML=dir?SVG_DIR:SVG_FILE;it.appendChild(E('span','',name));
+const open=async()=>{if(dir)return go(cwd==='/'?'/'+name:cwd+'/'+name);const p=(cwd==='/'?'':cwd)+'/'+name,r=await readFile(p);if(!r.code)openEditor(p,r.out)};
+it.addEventListener('click',open);
+ctxOn(it,(x,y)=>showCtx(x,y,[
+{label:'Mở',action:open},
+{label:'Đổi tên',action:()=>uiPrompt('Tên mới',name,async nn=>{if(nn===name||nn.includes('/'))return;await shRun('mv '+q(name)+' '+q(nn),cwd);paint()})},
+{label:'Xóa',danger:true,action:()=>uiConfirm('Xóa "'+name+'"?',async()=>{await shRun('rm -rf '+q(name),cwd);paint()})},
+{label:'Thuộc tính',action:async()=>{const r=await shRun('ls -ld '+q(name),cwd);uiAlert(clean(r.out).trim()||name,'Thuộc tính')}}
+]));
+grid.appendChild(it);
+});
+sn.textContent=ents.length+' mục';
 }
-
+function go(p){cwd=p;if(hist[hi]!==p){hist=hist.slice(0,hi+1);hist.push(p);hi=hist.length-1}paint()}
+b.querySelector('.fm-tb').addEventListener('click',e=>{
+const btn=e.target.closest('button');if(!btn||btn.disabled)return;const a=btn.dataset.a;
+if(a==='back'&&hi>0){hi--;cwd=hist[hi];paint()}
+else if(a==='fwd'&&hi<hist.length-1){hi++;cwd=hist[hi];paint()}
+else if(a==='up')go(cwd.replace(/\/[^/]+$/,'')||'/');
+else if(a==='home')go(HOME);
+else if(a==='new')uiPrompt('Tên thư mục mới','',async nn=>{if(nn.includes('/'))return;await shRun('mkdir '+q(nn),cwd);paint()});
+});
+paint();createWindow({title:'File Manager',body:b});
+}
 const KEY_SEC='k_sections_v2',KEY_PIN='k_pinned_v2',KEY_DESK='k_desk_v2',KEY_REC='k_recent_v2';
 const mk=(n,t)=>({name:n,target:t||'',icon:''});
 const DEFAULTS=[
- {name:'Favorites',apps:[mk('file manager','file_manager'),mk('text editor','text_editor'),mk('cài đặt','settings')]}
+{name:'Favorites',apps:[mk('file manager','file_manager'),mk('text editor','text_editor'),mk('cài đặt','settings')]}
 ];
 let sections=jget(KEY_SEC,null);
 if(!Array.isArray(sections)||!sections.length)sections=JSON.parse(JSON.stringify(DEFAULTS));
-sections=sections.filter(s=>s&&typeof s.name==='string').map(s=>({name:s.name,apps:(Array.isArray(s.apps)?s.apps:[]).filter(a=>a&&a.name).map(a=>({name:String(a.name),target:String(a.target||''),icon:String(a.icon||'')}))}));
+sections=sections.filter(s=>s&&typeof s.name==='string').map(s=>({name:s.name,def:s.def?1:0,apps:(Array.isArray(s.apps)?s.apps:[]).filter(a=>a&&a.name).map(a=>({name:String(a.name),target:String(a.target||''),icon:String(a.icon||''),def:a.def?1:0}))}));
+{
+const DEF_APPS=[['file manager','file_manager'],['text editor','text_editor'],['cài đặt','settings']];
+let fav=sections.find(x=>x.def)||sections.find(x=>x.name==='Favorites');
+if(!fav){fav={name:'Favorites',def:1,apps:[]};sections.unshift(fav)}
+fav.def=1;
+DEF_APPS.forEach(([n,t])=>{let a=fav.apps.find(x=>x.def&&x.target===t)||fav.apps.find(x=>x.target===t);if(!a){a={name:n,target:t,icon:'',def:1};fav.apps.push(a)}a.def=1});
+}
 let pinned=jget(KEY_PIN,[]).filter(a=>a&&a.name),desk=jget(KEY_DESK,{1:[],2:[],3:[],4:[]}),recent=jget(KEY_REC,[]).filter(a=>a&&a.name);
 for(let k=1;k<=4;k++)if(!Array.isArray(desk[k]))desk[k]=[];
 let activeIndex=0,searchTerm='';
@@ -466,132 +665,163 @@ const findApp=p=>{for(const s of sections)for(const a of s.apps)if(same(a,p))ret
 const secs=()=>sections.concat([{name:'Recently used',v:1,apps:recent.map(r=>findApp(r)||r)},{name:'All',v:1,apps:allApps()}]);
 const save=()=>{ls.set(KEY_SEC,JSON.stringify(sections));ls.set(KEY_PIN,JSON.stringify(pinned));ls.set(KEY_DESK,JSON.stringify(desk));ls.set(KEY_REC,JSON.stringify(recent))};
 const pinIdx=a=>pinned.findIndex(p=>same(p,a)),deskList=()=>desk[ws]||(desk[ws]=[]),deskIdx=a=>deskList().findIndex(p=>same(p,a));
-
 const iconCache={};
 function getAppIconSrc(target){
-  if(!target)return'';if(iconCache[target])return iconCache[target];
-  let src='';
-  try{if(window.AndroidApp&&typeof window.AndroidApp.getAppIcon==='function'){const r=window.AndroidApp.getAppIcon(target);if(r)src=String(r).indexOf('data:')===0?String(r):'data:image/png;base64,'+r}}catch(e){}
-  if(src)iconCache[target]=src;return src;
+if(!target)return'';if(iconCache[target])return iconCache[target];
+let src='';
+try{if(window.AndroidApp&&typeof window.AndroidApp.getAppIcon==='function'){const r=window.AndroidApp.getAppIcon(target);if(r)src=String(r).indexOf('data:')===0?String(r):'data:image/png;base64,'+r}}catch(e){}
+if(src)iconCache[target]=src;return src;
 }
 function makeIcon(app,size){
-  const src=app.icon||getAppIconSrc(app.target);let el;
-  if(src){el=E('img');el.src=src;el.draggable=false}
-  else{el=E('div','app-icon-letter',(app.name||'?').charAt(0).toUpperCase());el.style.fontSize=Math.round(size*.45)+'px'}
-  el.classList.add('app-icon');el.style.width=size+'px';el.style.height=size+'px';return el;
+const src=app.icon||getAppIconSrc(app.target);let el;
+if(src){el=E('img');el.src=src;el.draggable=false}
+else{el=E('div','app-icon-letter',(app.name||'?').charAt(0).toUpperCase());el.style.fontSize=Math.round(size*.45)+'px'}
+el.classList.add('app-icon');el.style.width=size+'px';el.style.height=size+'px';return el;
 }
 const iconInput=$('iconInput'),squareImg=$('sqImg'),bottomLogo=$('logoImg');
-const LS_IMG_TEST='linuxweb_img_test',LS_IMG_LOGO='linuxweb_img_logo',DEF_TEST='file:///android_asset/test.png',DEF_LOGO='file:///android_asset/logo.png';
-const FALLBACK='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#2563eb"/><text x="16" y="24" font-size="22" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="700">L</text></svg>');
-[squareImg,bottomLogo].forEach(i=>{i.addEventListener('error',()=>{if(i.src!==FALLBACK)i.src=FALLBACK});if(i.complete&&i.naturalWidth===0&&i.src!==FALLBACK)i.src=FALLBACK});
-let iconTarget=null;
-{const t=ls.get(LS_IMG_TEST);if(t)squareImg.src=t;const l=ls.get(LS_IMG_LOGO);if(l)bottomLogo.src=l}
-function pickIcon(t){iconTarget=t;iconInput.value='';iconInput.click()}
-function applyIcon(t,url){
-  if(t.type==='test'){squareImg.src=url;ls.set(LS_IMG_TEST,url)}else if(t.type==='logo'){bottomLogo.src=url;ls.set(LS_IMG_LOGO,url)}else{t.icon=url;refresh()}
-}
-function resetIcon(t){
-  if(t.type==='test'){squareImg.src=DEF_TEST;ls.del(LS_IMG_TEST)}else if(t.type==='logo'){bottomLogo.src=DEF_LOGO;ls.del(LS_IMG_LOGO)}else{t.icon='';refresh()}
-}
-iconInput.addEventListener('change',ev=>{
-  const file=ev.target.files&&ev.target.files[0],t=iconTarget;iconTarget=null;iconInput.value='';
-  if(!file||!t||!file.type.startsWith('image/'))return;
-  const r=new FileReader();r.onload=e=>{
-    const img=new Image();
-    img.onload=()=>{const s=Math.min(1,128/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*s)),h=Math.max(1,Math.round(img.height*s)),cv=E('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);let u=e.target.result;try{u=cv.toDataURL('image/png')}catch(er){}applyIcon(t,u)};
-    img.onerror=()=>applyIcon(t,e.target.result);img.src=e.target.result;
-  };r.readAsDataURL(file);
+const LOGO_FILE='flshlogo.png',LOGO_EMBED="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAGFBMVEX/9rH/8IH/61X/6k3/6kz/6kv/6kf/6D4eYEjhAAAD2klEQVR42s2Vz28bRRTHvzNeHFEaz6xxEkTTeG1SgmrUQomIFEyo26inlLYSKRKKqEtpeisFVe2fUTgmVeIUToj+gsLBURJKChECGocAB9rI3nUsJPJjd2ZDI9E4Hg52iIOwfeDCHOd9NO/N9837DukFJg6g8qJAvUdUBRRIDYAB1VOA8aoAcVADmAlWTyFFS40aBK9xAql5i1qAqAUQWR2oLKQSJaBSlW4LAIr6Sr1SOz43AU3Bs2XbcQASAgD3h4W+LDRsUcqW+3RALf8YAqR7wsU/gHQ7u+oApOHIXX8hcv9m3R6uQW3WaHaPpgDCHPvy8fz8tM9sEpyW9dqMDaQAnTddCKvBr5tXrHcFQNVm/q5BQU42OgeWx7vPGPdu96j380ZZLwqtQ7JNT2yjEyvUHjsUz7jEUKwMyCUlXxB18qwT5CS8tHr0tmGWA6LTOsc4Z42fXeziAM17GRjbbHchdOmQFCv6K9HuMQsAaD4mX+e3oJWA+fW65hW/theuDdvROUB/3juAJrMEqD1D782yg0rCDrQDS7MG0KLP8N9aSoC7PeCCmOCF1u+SQm/syQLE8i+rjRrIlb5PW8A5cskU0Z1fPwIA33P+daMIFHY3Tj28YwKq0+ro77/4/IIPAGGvKlZMkRs/ZXZ+cNKFO9KPxRukN8NdwFpK02IKFVnN0ikfhdrhTY8Oi0DSlUDhWeUp6ZC9bggzGv/QpF/17DQDF9asty0g92XGB0IBgIjDvv2JBw+7VCAr+98cFMdtruRLQiceQQEgqIvAZc8sA4KcLs083p8nKts83HDCIYICXG2XNOnGfcYtAYAGYuMU2ej1lcWbBhEUAEkZUnLTt1+K4jiEYEYT4pSyjnBOARB5sNArygco3TXMvM6xhpE+TgGhNOJMn5dEbLwuu32IWmfFgzVvFp7d7PumR6Zebvo28+Q3jz1TjLd+vKox8QRe6BBFHRx7YDJILHEYAFS6Nem+4fYZwN3bRaFUbFdozkcgAcDOdietd66cnwQQNooAyeW955Tq9E4qO9MaHbDil56eMEr1aEQAvtiNL7bFnKChP6U+ydB4oi3qblxIA1Gc5I6OcNc5lhKOg11ribZo9u9x0gjyhmC/xBMOuSZA/Ow+KY9DQw4K2ImwLYQOZdv+00tlcWiQiknk7p3GVUcJ3d/LxvzlxqkBDChEUulMewiAMyfDWwxFA+MS8/WGDBfGAOh+/1Yj8kS8HdfW9w3H/wTRdV1/9F/c3l3sHm2crOSFngiZ+2P69zOkitM2v4UXKx4ATwTkp9fyelW3bxmj1b8DEv6P/8X/H/gLjjGTP4famYQAAAAASUVORK5CYII=";
+ls.del('linuxweb_img_test');ls.del('linuxweb_img_logo');
+[squareImg,bottomLogo].forEach(i=>{
+let step=0;const next=()=>{step++;if(step===1)i.src=LOGO_FILE;else if(step===2)i.src=LOGO_EMBED};
+i.addEventListener('error',next);if(i.complete&&i.naturalWidth===0)next();
 });
-
-function bounce(p){document.querySelectorAll('.desk-item,.pinned-item.icon-only').forEach(el=>{if(el.title===p.name){el.classList.remove('bouncing');void el.offsetWidth;el.classList.add('bouncing');setTimeout(()=>el.classList.remove('bouncing'),400)}})}
+let iconTarget=null;
+function pickIcon(t){iconTarget=t;iconInput.value='';iconInput.click()}
+function applyIcon(t,url){t.icon=url;refresh()}
+iconInput.addEventListener('change',ev=>{
+const file=ev.target.files&&ev.target.files[0],t=iconTarget;iconTarget=null;iconInput.value='';
+if(!file||!t||!file.type.startsWith('image/'))return;
+const r=new FileReader();r.onload=e=>{
+const img=new Image();
+img.onload=()=>{const s=Math.min(1,128/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*s)),h=Math.max(1,Math.round(img.height*s)),cv=E('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);let u=e.target.result;try{u=cv.toDataURL('image/png')}catch(er){}applyIcon(t,u)};
+img.onerror=()=>applyIcon(t,e.target.result);img.src=e.target.result;
+};r.readAsDataURL(file);
+});
 function addRecent(p){recent=recent.filter(r=>!same(r,p));recent.unshift({name:p.name,target:p.target||''});recent=recent.slice(0,12);ls.set(KEY_REC,JSON.stringify(recent))}
 function launch(p){
-  const t=p.target||'';if(!t)return false;
-  if(t==='file_manager')openFileManager();
-  else if(t==='text_editor')openEditor('','');
-  else if(t==='settings')openSettings();
-  else if(t.startsWith('url:')){try{window.open(t.slice(4),'_blank')}catch(e){}}
-  else if(window.AndroidApp&&typeof window.AndroidApp.openApp==='function'){try{window.AndroidApp.openApp(t)}catch(e){}}
-  else return false;
-  addRecent(p);bounce(p);return true;
+const t=p.target||'';if(!t)return false;
+if(t==='file_manager')openFileManager();
+else if(t==='text_editor')openEditor('','');
+else if(t==='settings')openSettings();
+else if(t.startsWith('url:')){try{window.open(t.slice(4),'_blank')}catch(e){}}
+else if(window.AndroidApp&&typeof window.AndroidApp.openApp==='function'){try{window.AndroidApp.openApp(t)}catch(e){}}
+else return false;
+addRecent(p);return true;
 }
-
 const dropdown=$('dropdown'),mainList=$('mainList'),subList=$('subList'),addSubBtn=$('addSubBtn'),searchInput=$('searchInput');
+let anim={};
+function showNew(list){const nd=list.querySelector('.drop-in');if(!nd)return;const bot=nd.offsetTop+nd.offsetHeight;if(bot>list.scrollTop+list.clientHeight-36)list.scrollTop=bot-list.clientHeight+40}
 function renderMain(){
-  mainList.innerHTML='';const all=secs();let n=0;
-  all.forEach((s,i)=>{
-    if(searchTerm&&!s.name.toLowerCase().includes(searchTerm))return;n++;
-    const d=E('div','ditem'+(i===activeIndex?' active':''),s.name);d.dataset.i=i;
-    if(!s.v)ctxOn(d,(x,y)=>showCtx(x,y,[
-      {label:'Đổi tên',action:()=>uiPrompt('Tên mục',s.name,v=>{s.name=v;refresh()})},
-      {label:'Xóa',danger:true,action:()=>uiConfirm('Xóa mục "'+s.name+'"?',()=>{sections.splice(i,1);if(activeIndex>=sections.length)activeIndex=0;refresh()})}]));
-    mainList.appendChild(d);
-  });
-  if(!n)mainList.appendChild(E('div','empty','Không có kết quả'));
+const st=mainList.scrollTop;mainList.innerHTML='';const all=secs();let n=0;
+all.forEach((s,i)=>{
+if(searchTerm&&!s.name.toLowerCase().includes(searchTerm))return;n++;
+const d=E('div','ditem'+(i===activeIndex?' active':'')+(s===anim.main?' drop-in':''),s.name);d.dataset.i=i;
+if(!s.v){
+const menu=(x,y)=>showCtx(x,y,[
+{label:'Đổi tên',action:()=>uiPrompt('Tên mục',s.name,v=>{s.name=v;refresh()})},
+...(s.def?[]:[{label:'Xóa',danger:true,action:()=>uiConfirm('Xóa mục "'+s.name+'"?',()=>{sections.splice(i,1);if(activeIndex>=sections.length)activeIndex=0;refresh()})}])]);
+if(searchTerm)ctxOn(d,menu);
+else{d.dataset.mv='1';reorderable(d,mainList,i,to=>{const act=secs()[activeIndex];moveItem(sections,i,to);const ni=sections.indexOf(act);if(ni>=0)activeIndex=ni;refresh()},menu)}
+}
+mainList.appendChild(d);
+});
+if(!n)mainList.appendChild(E('div','empty','Không có kết quả'));
+mainList.scrollTop=st;showNew(mainList);
 }
 function renderSub(){
-  subList.innerHTML='';const s=secs()[activeIndex];
-  if(!s){addSubBtn.style.display='none';subList.appendChild(E('div','empty','Chọn một mục'));return}
-  addSubBtn.style.display=s.v?'none':'block';
-  if(!s.apps.length)subList.appendChild(E('div','empty','Chưa có app nào'));
-  s.apps.forEach((a,ai)=>{
-    const d=E('div','sub-item');d.appendChild(makeIcon(a,24));
-    const t=E('div','sub-t');t.appendChild(E('div','sub-n',a.name));if(a.target)t.appendChild(E('div','sub-g',a.target));d.appendChild(t);
-    d.addEventListener('click',()=>{if(launch(a)){dropdown.classList.remove('show');renderSub()}});
-    ctxOn(d,(x,y)=>{
-      const it=[];
-      if(!s.v){
-        it.push({label:'Đổi tên',action:()=>uiPrompt('Tên app',a.name,v=>{const pi=pinIdx({name:a.name,target:a.target});if(pi>=0)pinned[pi].name=v;a.name=v;refresh()})});
-        it.push({label:'Đổi đường dẫn',action:()=>uiPrompt('Đường dẫn (vd: url:https://..., com.pkg.app)',a.target,v=>{a.target=v;refresh()})});
-      }
-      it.push({label:'Đổi ảnh',action:()=>pickIcon(a)});
-      if(a.icon)it.push({label:'Xóa ảnh riêng',action:()=>{a.icon='';refresh()}});
-      it.push({label:pinIdx(a)>=0?'Bỏ ghim khỏi taskbar':'Ghim lên taskbar',action:()=>{const i=pinIdx(a);if(i>=0)pinned.splice(i,1);else pinned.push({name:a.name,target:a.target||''});refresh()}});
-      it.push({label:deskIdx(a)>=0?'Bỏ khỏi màn hình chính':'Thêm ra màn hình chính',action:()=>{const i=deskIdx(a);if(i>=0)deskList().splice(i,1);else deskList().push({name:a.name,target:a.target||''});dropdown.classList.remove('show');refresh()}});
-      if(!s.v)it.push({label:'Xóa',danger:true,action:()=>{const pi=pinIdx(a);if(pi>=0)pinned.splice(pi,1);for(let k=1;k<=4;k++)desk[k]=desk[k].filter(x=>!same(x,a));s.apps.splice(ai,1);refresh()}});
-      showCtx(x,y,it);
-    });
-    subList.appendChild(d);
-  });
+const st=subList.scrollTop;subList.innerHTML='';const s=secs()[activeIndex];
+if(!s){addSubBtn.style.display='none';subList.appendChild(E('div','empty','Chọn một mục'));return}
+addSubBtn.style.display=s.v?'none':'block';
+if(!s.apps.length)subList.appendChild(E('div','empty','Chưa có app nào'));
+s.apps.forEach((a,ai)=>{
+const d=E('div','sub-item'+(a===anim.sub?' drop-in':''));d.appendChild(makeIcon(a,24));
+const t=E('div','sub-t');t.appendChild(E('div','sub-n',a.name));if(a.target)t.appendChild(E('div','sub-g',a.target));d.appendChild(t);
+d.addEventListener('click',()=>{if(launch(a))renderSub()});
+const menu=(x,y)=>{
+const it=[];
+if(!s.v){
+it.push({label:'Đổi tên',action:()=>uiPrompt('Tên app',a.name,v=>{const pi=pinIdx({name:a.name,target:a.target});if(pi>=0)pinned[pi].name=v;a.name=v;refresh()})});
+it.push({label:'Đổi đường dẫn',action:()=>uiPrompt('Đường dẫn (vd: url:https://..., com.pkg.app)',a.target,v=>{a.target=v;refresh()})});
+}
+it.push({label:'Đổi ảnh',action:()=>pickIcon(a)});
+if(a.icon)it.push({label:'Xóa ảnh riêng',action:()=>{a.icon='';refresh()}});
+it.push({label:pinIdx(a)>=0?'Bỏ ghim khỏi taskbar':'Ghim lên taskbar',action:()=>{const i=pinIdx(a);if(i>=0)unpinAt(i);else{const o={name:a.name,target:a.target||''};pinned.push(o);anim.pin=o;refresh()}}});
+it.push({label:deskIdx(a)>=0?'Bỏ khỏi màn hình chính':'Thêm ra màn hình chính',action:()=>{const i=deskIdx(a);if(i>=0)deskList().splice(i,1);else{const o={name:a.name,target:a.target||''};deskList().push(o);anim.desk=o}refresh()}});
+if(!s.v&&!a.def)it.push({label:'Xóa',danger:true,action:()=>{const pi=pinIdx(a);if(pi>=0)pinned.splice(pi,1);for(let k=1;k<=4;k++)desk[k]=desk[k].filter(x=>!same(x,a));s.apps.splice(ai,1);refresh()}});
+showCtx(x,y,it);
+};
+if(s.v)ctxOn(d,menu);
+else{d.dataset.mv='1';reorderable(d,subList,ai,to=>{moveItem(s.apps,ai,to);refresh()},menu)}
+subList.appendChild(d);
+});
+subList.scrollTop=st;showNew(subList);
+}
+function unpinAt(i){
+const el=$('pinnedBar').children[i],fin=()=>{pinned.splice(i,1);refresh()};
+if(el){el.classList.add('pin-out');setTimeout(fin,260)}else fin();
 }
 function renderPinned(){
-  const bar=$('pinnedBar');bar.innerHTML='';
-  pinned.forEach((p,idx)=>{
-    const d=E('div','pinned-item icon-only');d.title=p.name;d.appendChild(makeIcon(findApp(p)||p,tbh-10));
-    d.addEventListener('click',e=>{e.stopPropagation();launch(p)});
-    ctxOn(d,(x,y)=>showCtx(x,y,[{label:'Bỏ ghim',danger:true,action:()=>{pinned.splice(idx,1);refresh()}}]));
-    bar.appendChild(d);
-  });
+const bar=$('pinnedBar');bar.innerHTML='';
+pinned.forEach((p,idx)=>{
+const d=E('div','pinned-item icon-only'+(p===anim.pin?' pin-in':''));d.title=p.name;d.appendChild(makeIcon(findApp(p)||p,tbh-10));
+d.addEventListener('click',e=>{e.stopPropagation();launch(p)});
+ctxOn(d,(x,y)=>showCtx(x,y,[{label:'Bỏ ghim',danger:true,action:()=>unpinAt(idx)}]));
+bar.appendChild(d);
+});
+}
+function deskGrid(){const a=wa(),IW=icoSz+36,IH=icoSz+44;return{a,IW,IH,rows:Math.max(1,Math.floor((a.b-a.t-8)/IH)),cols:Math.max(1,Math.floor((a.r-a.l-8)/IW))}}
+function deskLayout(g){
+const list=deskList(),taken=new Set(),pos=new Array(list.length),key=(c,r)=>c+','+r;
+list.forEach((p,i)=>{if(Number.isInteger(p.c)&&Number.isInteger(p.r)&&p.c>=0&&p.r>=0&&p.r<g.rows&&p.c<g.cols&&!taken.has(key(p.c,p.r))){taken.add(key(p.c,p.r));pos[i]=[p.c,p.r]}});
+list.forEach((p,i)=>{
+if(pos[i])return;let c=0,r=0;while(taken.has(key(c,r))){r++;if(r>=g.rows){r=0;c++}}
+taken.add(key(c,r));pos[i]=[c,r];if(!Number.isInteger(p.c)||!Number.isInteger(p.r)){p.c=c;p.r=r}
+});
+return pos;
 }
 function renderDesk(){
-  const el=$('desktop');el.innerHTML='';
-  const a=wa(),IW=icoSz+36,IH=icoSz+44,rows=Math.max(1,Math.floor((a.b-a.t-8)/IH));
-  deskList().forEach((p,idx)=>{
-    const x=a.l+8+Math.floor(idx/rows)*IW,y=a.t+8+(idx%rows)*IH;
-    const d=E('div','desk-item');d.title=p.name;d.style.cssText='left:'+x+'px;top:'+y+'px;width:'+IW+'px;height:'+IH+'px';
-    d.appendChild(makeIcon(findApp(p)||p,icoSz));const nm=E('div','desk-name',p.name);nm.style.maxWidth=(IW-6)+'px';d.appendChild(nm);
-    d.addEventListener('click',e=>{e.stopPropagation();launch(p)});
-    ctxOn(d,(cx,cy)=>showCtx(cx,cy,[{label:'Đổi ảnh',action:()=>{const f=findApp(p);if(f)pickIcon(f)}},{label:'Xóa khỏi màn hình',danger:true,action:()=>{deskList().splice(idx,1);refresh()}}]));
-    el.appendChild(d);
-  });
+const el=$('desktop');el.innerHTML='';
+const g=deskGrid(),list=deskList(),pos=deskLayout(g),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+list.forEach((p,idx)=>{
+const x=g.a.l+8+pos[idx][0]*g.IW,y=g.a.t+8+pos[idx][1]*g.IH;
+const d=E('div','desk-item'+(p===anim.desk?' drop-in':''));d.title=p.name;d.style.cssText='left:'+x+'px;top:'+y+'px;width:'+g.IW+'px;height:'+g.IH+'px';
+d.appendChild(makeIcon(findApp(p)||p,icoSz));const nm=E('div','desk-name',p.name);nm.style.maxWidth=(g.IW-6)+'px';d.appendChild(nm);
+d.addEventListener('click',e=>{e.stopPropagation();launch(p)});
+let slot=null,cell=pos[idx];
+const putSlot=()=>{if(slot)slot.style.cssText='left:'+(g.a.l+8+cell[0]*g.IW)+'px;top:'+(g.a.t+8+cell[1]*g.IH)+'px;width:'+g.IW+'px;height:'+g.IH+'px'};
+holdDrag(d,{
+onLift(){d.classList.remove('drop-in');d.classList.add('lifted');slot=E('div','desk-slot');el.insertBefore(slot,el.firstChild);putSlot()},
+onMove(e,dx,dy){
+const nx=x+dx/view.sx,ny=y+dy/view.sy;d.style.left=nx+'px';d.style.top=ny+'px';
+cell=[cl(Math.round((nx-g.a.l-8)/g.IW),0,g.cols-1),cl(Math.round((ny-g.a.t-8)/g.IH),0,g.rows-1)];putSlot();
+},
+onDrop(moved){
+if(slot){slot.remove();slot=null}d.classList.remove('lifted');
+if(moved){
+const old=pos[idx],j=pos.findIndex((q,k)=>k!==idx&&q[0]===cell[0]&&q[1]===cell[1]);
+if(j>=0){list[j].c=old[0];list[j].r=old[1]}
+p.c=cell[0];p.r=cell[1];refresh();
+}else{d.style.left=x+'px';d.style.top=y+'px'}
+},
+onMenu:(cx,cy)=>showCtx(cx,cy,[{label:'Đổi ảnh',action:()=>{const f=findApp(p);if(f)pickIcon(f)}},{label:'Xóa khỏi màn hình',danger:true,action:()=>{deskList().splice(idx,1);refresh()}}])
+});
+el.appendChild(d);
+});
 }
-function refresh(){renderMain();renderSub();renderPinned();renderDesk();save()}
-
-$('addMainBtn').addEventListener('click',e=>{e.stopPropagation();let n=1;const ex=new Set(sections.map(s=>s.name));while(ex.has('New folder '+n))n++;sections.push({name:'New folder '+n,apps:[]});activeIndex=sections.length-1;refresh()});
+function refresh(){renderMain();renderSub();renderPinned();renderDesk();save();anim={}}
+$('addMainBtn').addEventListener('click',e=>{e.stopPropagation();let n=1;const ex=new Set(sections.map(s=>s.name));while(ex.has('New folder '+n))n++;const ns={name:'New folder '+n,apps:[]};sections.push(ns);activeIndex=sections.length-1;anim.main=ns;refresh()});
 addSubBtn.addEventListener('click',e=>{
-  e.stopPropagation();const s=sections[activeIndex];if(!s)return;
-  uiPrompt('Tên app','App',n=>{uiPrompt('Đường dẫn (vd: url:https://..., com.pkg.app)','',t=>{s.apps.push({name:n,target:t,icon:''});refresh()})});
+e.stopPropagation();const s=sections[activeIndex];if(!s)return;
+uiPrompt('Tên app','App',n=>{uiPrompt('Đường dẫn (vd: url:https://..., com.pkg.app)','',t=>{const na={name:n,target:t,icon:''};s.apps.push(na);anim.sub=na;refresh()})});
 });
 mainList.addEventListener('click',e=>{e.stopPropagation();const it=e.target.closest('.ditem');if(!it)return;activeIndex=Number(it.dataset.i);searchTerm='';searchInput.value='';refresh()});
 searchInput.addEventListener('input',e=>{searchTerm=e.target.value.trim().toLowerCase();renderMain()});
 searchInput.addEventListener('keydown',e=>e.stopPropagation());
 const sq=$('squareIcon');
 sq.addEventListener('click',e=>{e.stopPropagation();dropdown.classList.toggle('show');renderSub()});
-document.addEventListener('click',e=>{if(!dropdown.contains(e.target)&&!sq.contains(e.target))dropdown.classList.remove('show')});
+document.addEventListener('click',e=>{if(!dropdown.contains(e.target)&&!sq.contains(e.target)&&!(e.target.closest&&e.target.closest('.modal-bk,.ctx-menu')))dropdown.classList.remove('show')});
 dropdown.addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){dropdown.classList.remove('show');closeCtx()}});
-[[sq,{type:'test'}],[bottomLogo,{type:'logo'}]].forEach(([el,t])=>ctxOn(el,(x,y)=>showCtx(x,y,[{label:'Đổi ảnh',action:()=>pickIcon(t)},{label:'Khôi phục ảnh gốc',action:()=>resetIcon(t)}])));
-
 const LS_BG_IMG='linuxweb_bg_img',LS_BG_VID='linuxweb_bg_vid';
 const wsEls=document.querySelectorAll('.ws'),fileInput=$('fileInput'),videoInput=$('videoInput'),videoBg=$('videoBg');
 const bgKeyOf=n=>n===1?LS_BG_IMG:LS_BG_IMG+'_'+n,bgKey=()=>bgKeyOf(ws);
@@ -599,144 +829,280 @@ const vidKeyOf=n=>n===1?LS_BG_VID:LS_BG_VID+'_'+n,vidKey=()=>vidKeyOf(ws);
 const bgMem={},vidMem={};
 const getBg=k=>bgMem[k]||ls.get(k),saveBg=(k,u)=>{bgMem[k]=u;return ls.set(k,u)};
 const getVid=k=>vidMem[k]||ls.get(k),saveVid=(k,u)=>{vidMem[k]=u;return ls.set(k,u)};
-const curBg=()=>getBg(bgKey())||(ws!==1?getBg(LS_BG_IMG):null);
-const curVid=()=>getVid(vidKey())||(ws!==1?getVid(LS_BG_VID):null);
+const curBg=()=>getBg(bgKey());
+const curVid=()=>getVid(vidKey());
+if(ls.get('linuxweb_bg_sep')!=='1'){const b1=getBg(LS_BG_IMG);if(b1&&!getVid(LS_BG_VID))for(let i=2;i<=4;i++)if(!getBg(bgKeyOf(i))&&!getVid(vidKeyOf(i)))saveBg(bgKeyOf(i),b1);ls.set('linuxweb_bg_sep','1')}
 const fitCss=f=>f==='contain'?'contain':(f==='stretch'?'100% 100%':'cover');
 function getFit(){const f=ls.get('linuxweb_bg_fit');return(f==='contain'||f==='stretch')?f:'cover'}
 function updateWpPreview(){
-  const img=curBg(),vid=curVid();
-  document.querySelectorAll('#spPreview').forEach(pv=>{
-    if(vid){pv.style.backgroundImage='none';pv.textContent='VIDEO'}
-    else{pv.textContent=img?'':'Chưa có ảnh';pv.style.backgroundImage=img?"url('"+img+"')":'none';pv.style.backgroundSize=fitCss(getFit())}
-  });
-  document.querySelectorAll('#spWsLabel').forEach(l=>{l.textContent='Màn hình '+ws});
+const img=curBg(),vid=curVid();
+document.querySelectorAll('#spPreview').forEach(pv=>{
+if(vid){pv.style.backgroundImage='none';pv.textContent='VIDEO'}
+else{pv.textContent=img?'':'Chưa có ảnh';pv.style.backgroundImage=img?"url('"+img+"')":'none';pv.style.backgroundSize=fitCss(getFit())}
+});
+document.querySelectorAll('#spWsLabel').forEach(l=>{l.textContent='Màn hình '+ws});
 }
 function applyBackground(){
-  const img=curBg(),vid=curVid(),s=document.body.style;
-  if(vid){
-    videoBg.style.display='block';
-    if(videoBg.getAttribute('src')!==vid){videoBg.src=vid;const pr=videoBg.play();if(pr&&pr.catch)pr.catch(()=>{})}
-    s.backgroundImage='none';
-  }else{
-    videoBg.style.display='none';try{videoBg.pause()}catch(e){}videoBg.removeAttribute('src');try{videoBg.load()}catch(e){}
-    s.backgroundImage=img?"url('"+img+"')":'none';
-    s.backgroundSize=fitCss(getFit());s.backgroundPosition='center';s.backgroundRepeat='no-repeat';
-  }
-  updateWpPreview();
+const img=curBg(),vid=curVid(),s=document.body.style;
+if(vid){
+videoBg.style.display='block';
+if(videoBg.getAttribute('src')!==vid){videoBg.src=vid;const pr=videoBg.play();if(pr&&pr.catch)pr.catch(()=>{})}
+s.backgroundImage='none';
+}else{
+videoBg.style.display='none';try{videoBg.pause()}catch(e){}videoBg.removeAttribute('src');try{videoBg.load()}catch(e){}
+s.backgroundImage=img?"url('"+img+"')":'none';
+s.backgroundSize=fitCss(getFit());s.backgroundPosition='center';s.backgroundRepeat='no-repeat';
+}
+updateWpPreview();
 }
 function shrinkImage(src,maxEdge,q,cb){
-  const img=new Image();
-  img.onload=()=>{const s=Math.min(1,maxEdge/Math.max(img.width,img.height)),w=Math.round(img.width*s),h=Math.round(img.height*s),cv=E('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);let o=src;try{o=cv.toDataURL('image/jpeg',q)}catch(e){}cb(o)};
-  img.onerror=()=>cb(src);img.src=src;
+const img=new Image();
+img.onload=()=>{const s=Math.min(1,maxEdge/Math.max(img.width,img.height)),w=Math.round(img.width*s),h=Math.round(img.height*s),cv=E('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);let o=src;try{o=cv.toDataURL('image/jpeg',q)}catch(e){}cb(o)};
+img.onerror=()=>cb(src);img.src=src;
 }
 const renderWs=()=>wsEls.forEach(el=>el.classList.toggle('active',Number(el.dataset.ws)===ws));
 wsEls.forEach(el=>el.addEventListener('click',e=>{
-  e.stopPropagation();const nw=Number(el.dataset.ws);if(nw===ws)return;
-  const right=nw>ws;ws=nw;ls.set('linuxweb_ws_v1',String(ws));
-  renderWs();applyBackground();renderDesk();refreshWindows();renderWinBar();
-  const c=$('desktop'),from=right?-view.vw:view.vw;
-  c.style.transition='none';c.style.transform='translateX('+from+'px)';c.style.opacity='0';void c.offsetWidth;
-  c.style.transition='transform .32s,opacity .32s';c.style.transform='translateX(0)';c.style.opacity='1';
+e.stopPropagation();const nw=Number(el.dataset.ws);if(nw===ws)return;
+const right=nw>ws;ws=nw;ls.set('linuxweb_ws_v1',String(ws));
+renderWs();applyBackground();renderDesk();refreshWindows();renderWinBar();
+const c=$('desktop'),from=right?-view.vw:view.vw;
+c.style.transition='none';c.style.transform='translateX('+from+'px)';c.style.opacity='0';void c.offsetWidth;
+c.style.transition='transform .32s,opacity .32s';c.style.transform='translateX(0)';c.style.opacity='1';
 }));
 fileInput.addEventListener('change',ev=>{
-  const file=ev.target.files&&ev.target.files[0];fileInput.value='';
-  if(!file||!file.type.startsWith('image/'))return;
-  const key=bgKey(),reader=new FileReader();
-  reader.onload=e=>shrinkImage(e.target.result,1920,.85,url=>{saveBg(key,url);applyBackground()});
-  reader.readAsDataURL(file);
+const file=ev.target.files&&ev.target.files[0];fileInput.value='';
+if(!file||!file.type.startsWith('image/'))return;
+const key=bgKey(),reader=new FileReader();
+reader.onload=e=>shrinkImage(e.target.result,1920,.85,url=>{saveBg(key,url);applyBackground()});
+reader.readAsDataURL(file);
 });
 videoInput.addEventListener('change',ev=>{
-  const file=ev.target.files&&ev.target.files[0];videoInput.value='';
-  if(!file||!file.type.startsWith('video/'))return;
-  const reader=new FileReader();
-  reader.onload=e=>{saveVid(vidKey(),e.target.result);applyBackground()};
-  reader.readAsDataURL(file);
+const file=ev.target.files&&ev.target.files[0];videoInput.value='';
+if(!file||!file.type.startsWith('video/'))return;
+const reader=new FileReader();
+reader.onload=e=>{saveVid(vidKey(),e.target.result);applyBackground()};
+reader.readAsDataURL(file);
 });
-
 const clock=$('clock');
 function updateClock(){const n=new Date(),p=v=>String(v).padStart(2,'0');clock.textContent=p(n.getHours())+':'+p(n.getMinutes())+(clockSec?':'+p(n.getSeconds()):'')+'  '+p(n.getDate())+'/'+p(n.getMonth()+1)+'/'+n.getFullYear()}
 updateClock();setInterval(updateClock,1000);
-
 function openSettings(){
-  const b=E('div');b.style.cssText='display:flex;height:100%;width:100%';
-  b.innerHTML='<div class="sp-nav"><div class="sp-nav-item active" data-page="wp">Hình nền</div><div class="sp-nav-item" data-page="ui">Giao diện</div><div class="sp-nav-item" data-page="disp">Màn hình</div></div><div class="sp-content">'+
-  '<div class="sp-page active" id="sp-wp"><div class="sp-title">Hình nền</div><div class="sp-preview" id="spPreview"></div>'+
-  '<div class="sp-row"><span id="spWsLabel"></span><div class="sp-btns"><button class="sp-btn" id="spPick">Chọn ảnh</button><button class="sp-btn" id="spVideoPick">Chọn video</button><button class="sp-btn danger" id="spClear">Xóa</button></div></div>'+
-  '<div class="sp-row"><span>Kiểu hiển thị</span><div class="sp-sel" id="spFit"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
-  '<div class="sp-row"><span>Dùng cho cả 4 màn hình</span><button class="sp-btn" id="spAll">Áp dụng</button></div></div>'+
-  '<div class="sp-page" id="sp-ui"><div class="sp-title">Giao diện</div>'+
-  '<div class="sp-row"><span>Logo thanh trên</span><div class="sp-btns"><button class="sp-btn" id="spTestPick">Đổi ảnh</button><button class="sp-btn" id="spTestReset">Khôi phục</button></div></div>'+
-  '<div class="sp-row"><span>Logo trong menu</span><div class="sp-btns"><button class="sp-btn" id="spLogoPick">Đổi ảnh</button><button class="sp-btn" id="spLogoReset">Khôi phục</button></div></div>'+
-  '<div class="sp-row"><span>Hiện giây trên đồng hồ</span><button class="sp-btn" id="spClockSec"></button></div>'+
-  '<div class="sp-row"><span>Vị trí taskbar</span><div class="sp-sel" id="spTbSel"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
-  '<div class="sp-row"><span>Màu nền Taskbar</span><input type="color" class="sp-color" id="spTbColor"></div>'+
-  '<div class="sp-row"><span>Màu chữ Taskbar</span><input type="color" class="sp-color" id="spTbText"></div>'+
-  '<div class="sp-row"><span>Độ mờ Taskbar (%)</span><input type="number" class="sp-num" id="spTbA" min="0" max="100" step="5"></div>'+
-  '<div class="sp-row"><span>Kích thước biểu tượng (px)</span><input type="number" class="sp-num" id="spIco" min="32" max="96" step="4"></div>'+
-  '<div class="sp-row"><span>Độ mờ cửa sổ (%)</span><input type="number" class="sp-num" id="spOpNum" min="0" max="100" step="5"></div></div>'+
-  '<div class="sp-page" id="sp-disp"><div class="sp-title">Màn hình</div>'+
-  '<div class="sp-row"><span>Độ phân giải</span><div class="sp-sel" id="spRes"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
-  '<div class="sp-row"><span>Kéo dãn lấp đầy màn hình</span><button class="sp-btn" id="spStretchBtn"></button></div>'+
-  '<div class="sp-row"><span>DPI / Tỉ lệ (%)</span><input type="number" class="sp-num" id="spDpiNum" min="70" max="200" step="10"></div>'+
-  '<div class="sp-row"><span>Tần số quét (Hz)</span><div class="sp-sel" id="spHz"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div></div></div>';
-  createWindow({title:'Cài đặt',body:b,max:true});
-  const q=id=>b.querySelector('#'+id),spClockSec=q('spClockSec'),spStretchBtn=q('spStretchBtn');
-  function bindSel(el,labels,get,set){
-    const cur=el.querySelector('.sp-sel-cur'),list=el.querySelector('.sp-sel-list');list.innerHTML='';
-    const render=()=>{const val=get();cur.textContent=labels[val]||'';list.querySelectorAll('div').forEach(o=>o.classList.toggle('active',o.dataset.v===String(val)))};
-    Object.keys(labels).forEach(k=>{const d=E('div','',labels[k]);d.dataset.v=k;d.onclick=e=>{e.stopPropagation();el.classList.remove('open');set(k);render()};list.appendChild(d)});
-    cur.onclick=e=>{e.stopPropagation();document.querySelectorAll('.sp-sel.open').forEach(x=>{if(x!==el)x.classList.remove('open')});el.classList.toggle('open')};
-    render();
-  }
-  function bindNum(id,get,min,max,apply){
-    const el=q(id);el.value=get();
-    el.addEventListener('keydown',e=>e.stopPropagation());
-    el.addEventListener('change',()=>{let v=parseInt(el.value,10);if(isNaN(v))v=get();v=Math.max(min,Math.min(max,v));el.value=v;apply(v)});
-  }
-  b.addEventListener('click',()=>document.querySelectorAll('.sp-sel.open').forEach(x=>x.classList.remove('open')));
-  bindSel(q('spFit'),{cover:'Lấp đầy',contain:'Vừa khung',stretch:'Kéo giãn'},getFit,k=>{ls.set('linuxweb_bg_fit',k);applyBackground()});
-  bindSel(q('spTbSel'),{top:'Trên',bottom:'Dưới',left:'Trái',right:'Phải'},()=>tb,k=>{tb=k;ls.set('linuxweb_tb',tb);document.body.dataset.tb=tb;renderDesk();refreshWindows()});
-  bindSel(q('spRes'),RES_LABEL,()=>res,k=>{res=k;ls.set('linuxweb_res',res);applyDpi();renderDesk();refreshWindows()});
-  bindSel(q('spHz'),{0:'Mặc định',60:'60 Hz',90:'90 Hz',120:'120 Hz',144:'144 Hz'},()=>hz,k=>{hz=parseInt(k,10);ls.set('linuxweb_hz',String(hz));applyHz()});
-  const renderClockSec=()=>{spClockSec.textContent=clockSec?'Bật':'Tắt'};
-  const renderStretch=()=>{spStretchBtn.textContent=isStretch?'Bật':'Tắt';spStretchBtn.classList.toggle('on',isStretch)};
-  q('spPick').addEventListener('click',()=>fileInput.click());
-  q('spVideoPick').addEventListener('click',()=>videoInput.click());
-  q('spClear').addEventListener('click',()=>{const k=bgKey(),v=vidKey();delete bgMem[k];ls.del(k);delete vidMem[v];ls.del(v);applyBackground()});
-  q('spAll').addEventListener('click',()=>{
-    const img=getBg(bgKey()),vid=getVid(vidKey());
-    if(!img&&!vid)return;
-    for(let i=1;i<=4;i++){if(img)saveBg(bgKeyOf(i),img);if(vid)saveVid(vidKeyOf(i),vid)}
-    applyBackground();
-  });
-  q('spTestPick').addEventListener('click',()=>pickIcon({type:'test'}));
-  q('spTestReset').addEventListener('click',()=>resetIcon({type:'test'}));
-  q('spLogoPick').addEventListener('click',()=>pickIcon({type:'logo'}));
-  q('spLogoReset').addEventListener('click',()=>resetIcon({type:'logo'}));
-  spClockSec.addEventListener('click',()=>{clockSec=!clockSec;ls.set('linuxweb_clock_sec',clockSec?'1':'0');renderClockSec();updateClock()});
-  spStretchBtn.addEventListener('click',()=>{isStretch=!isStretch;ls.set('linuxweb_stretch',isStretch?'1':'0');renderStretch();applyDpi();renderDesk();refreshWindows()});
-  b.querySelectorAll('.sp-nav-item').forEach(it=>it.addEventListener('click',()=>{
-    b.querySelectorAll('.sp-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===it.dataset.page));
-    b.querySelectorAll('.sp-page').forEach(p=>p.classList.toggle('active',p.id==='sp-'+it.dataset.page));
-  }));
-  bindNum('spTbA',()=>tbA,0,100,v=>{tbA=v;ls.set('linuxweb_tb_a',String(v));applyTheme()});
-  bindNum('spIco',()=>icoSz,32,96,v=>{icoSz=v;ls.set('linuxweb_ico',String(v));renderDesk()});
-  bindNum('spOpNum',()=>spA,0,100,v=>{spA=v;ls.set('linuxweb_sp_a',String(v));applyOpacity()});
-  bindNum('spDpiNum',()=>dpi,70,200,v=>{dpi=v;ls.set('linuxweb_dpi',String(v));applyDpi();renderDesk();refreshWindows()});
-  q('spTbColor').value=tbColor;q('spTbText').value=tbText;
-  q('spTbColor').addEventListener('input',e=>{tbColor=e.target.value;ls.set('linuxweb_tb_color',tbColor);applyTheme()});
-  q('spTbText').addEventListener('input',e=>{tbText=e.target.value;ls.set('linuxweb_tb_text',tbText);applyTheme()});
-  renderClockSec();renderStretch();updateWpPreview();
+const b=E('div');b.style.cssText='display:flex;height:100%;width:100%';
+b.innerHTML='<div class="sp-nav"><div class="sp-nav-item active" data-page="wp">Hình nền</div><div class="sp-nav-item" data-page="ui">Giao diện</div><div class="sp-nav-item" data-page="disp">Màn hình</div><div class="sp-nav-item" data-page="acc">Tài khoản</div></div><div class="sp-content">'+
+'<div class="sp-page active" id="sp-wp"><div class="sp-title">Hình nền</div><div class="sp-preview" id="spPreview"></div>'+
+'<div class="sp-row"><span id="spWsLabel"></span><div class="sp-btns"><button class="sp-btn" id="spPick">Chọn ảnh</button><button class="sp-btn" id="spVideoPick">Chọn video</button><button class="sp-btn danger" id="spClear">Xóa</button></div></div>'+
+'<div class="sp-row"><span>Kiểu hiển thị</span><div class="sp-sel" id="spFit"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
+'<div class="sp-row"><span>Dùng cho cả 4 màn hình</span><button class="sp-btn" id="spAll">Áp dụng</button></div><div class="sp-note" id="spNote"></div></div>'+
+'<div class="sp-page" id="sp-ui"><div class="sp-title">Giao diện</div>'+
+'<div class="sp-row"><span>Hiện giây trên đồng hồ</span><button class="sp-btn" id="spClockSec"></button></div>'+
+'<div class="sp-row"><span>Vị trí taskbar</span><div class="sp-sel" id="spTbSel"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
+'<div class="sp-row"><span>Màu nền Taskbar</span><button class="sp-colorbtn" id="spTbColor"></button></div>'+
+'<div class="sp-row"><span>Màu chữ Taskbar</span><button class="sp-colorbtn" id="spTbText"></button></div>'+
+'<div class="sp-row"><span>Độ mờ Taskbar (%)</span><input type="number" class="sp-num" id="spTbA" min="0" max="100" step="5"></div>'+
+'<div class="sp-row"><span>Kích thước biểu tượng (px)</span><input type="number" class="sp-num" id="spIco" min="32" max="96" step="4"></div>'+
+'<div class="sp-row"><span>Độ mờ cửa sổ (%)</span><input type="number" class="sp-num" id="spOpNum" min="0" max="100" step="5"></div></div>'+
+'<div class="sp-page" id="sp-acc"><div class="sp-title">Tài khoản</div>'+
+'<div class="sp-row"><span>Tên người dùng: <b id="spAcUser"></b></span><button class="sp-btn" id="spAcUserBtn">Đổi</button></div>'+
+'<div class="sp-row"><span>Tên máy: <b id="spAcHost"></b></span><button class="sp-btn" id="spAcHostBtn">Đổi</button></div>'+
+'<div class="sp-row"><span>Ngôn ngữ</span><div class="sp-sel" id="spLang"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
+'<div class="sp-row"><span>Mật khẩu</span><div class="sp-btns"><button class="sp-btn" id="spAcPw"></button><button class="sp-btn danger" id="spAcPwDel">Xóa</button></div></div>'+
+'<div class="sp-row"><span>Yêu cầu đăng nhập khi mở app</span><button class="sp-btn" id="spAcLock"></button></div>'+
+'<div class="sp-row"><span>Chạy lại thiết lập ban đầu</span><button class="sp-btn danger" id="spAcSetup">Chạy lại</button></div></div>'+
+'<div class="sp-page" id="sp-disp"><div class="sp-title">Màn hình</div>'+
+'<div class="sp-row"><span>Độ phân giải</span><div class="sp-sel" id="spRes"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div>'+
+'<div class="sp-row"><span>Kéo dãn lấp đầy màn hình</span><button class="sp-btn" id="spStretchBtn"></button></div>'+
+'<div class="sp-row"><span>DPI / Tỉ lệ (%)</span><input type="number" class="sp-num" id="spDpiNum" min="70" max="200" step="10"></div>'+
+'<div class="sp-row"><span>Tần số quét (Hz)</span><div class="sp-sel" id="spHz"><div class="sp-sel-cur"></div><div class="sp-sel-list"></div></div></div></div></div>';
+createWindow({title:'Cài đặt',body:b,max:true});
+const q=id=>b.querySelector('#'+id),spNote=q('spNote'),spClockSec=q('spClockSec'),spStretchBtn=q('spStretchBtn');
+const spMsg=m=>{spNote.textContent=m};
+function bindSel(el,labels,get,set){
+const cur=el.querySelector('.sp-sel-cur'),list=el.querySelector('.sp-sel-list');list.innerHTML='';
+const render=()=>{const val=get();cur.textContent=labels[val]||'';list.querySelectorAll('div').forEach(o=>o.classList.toggle('active',o.dataset.v===String(val)))};
+Object.keys(labels).forEach(k=>{const d=E('div','',labels[k]);d.dataset.v=k;d.onclick=e=>{e.stopPropagation();el.classList.remove('open');set(k);render();cur.classList.remove('sel-pop');void cur.offsetWidth;cur.classList.add('sel-pop')};list.appendChild(d)});
+cur.onclick=e=>{e.stopPropagation();document.querySelectorAll('.sp-sel.open').forEach(x=>{if(x!==el)x.classList.remove('open')});el.classList.toggle('open')};
+render();
+}
+function bindNum(id,get,min,max,apply){
+const el=q(id);el.value=get();
+el.addEventListener('keydown',e=>e.stopPropagation());
+el.addEventListener('change',()=>{let v=parseInt(el.value,10);if(isNaN(v))v=get();v=Math.max(min,Math.min(max,v));el.value=v;apply(v)});
+}
+b.addEventListener('click',()=>document.querySelectorAll('.sp-sel.open').forEach(x=>x.classList.remove('open')));
+bindSel(q('spFit'),{cover:'Lấp đầy',contain:'Vừa khung',stretch:'Kéo giãn'},getFit,k=>{ls.set('linuxweb_bg_fit',k);applyBackground()});
+bindSel(q('spTbSel'),{top:'Trên',bottom:'Dưới',left:'Trái',right:'Phải'},()=>tb,k=>{tb=k;ls.set('linuxweb_tb',tb);document.body.dataset.tb=tb;renderDesk();refreshWindows()});
+bindSel(q('spRes'),RES_LABEL,()=>res,k=>{res=k;ls.set('linuxweb_res',res);applyDpi();renderDesk();refreshWindows()});
+bindSel(q('spHz'),{0:'Mặc định',60:'60 Hz',90:'90 Hz',120:'120 Hz',144:'144 Hz'},()=>hz,k=>{hz=parseInt(k,10);ls.set('linuxweb_hz',String(hz));applyHz()});
+bindSel(q('spLang'),{en:'English',vi:'Tiếng Việt'},()=>lang,k=>setLang(k));
+const renderClockSec=()=>{spClockSec.textContent=clockSec?'Bật':'Tắt'};
+const renderStretch=()=>{spStretchBtn.textContent=isStretch?'Bật':'Tắt';spStretchBtn.classList.toggle('on',isStretch)};
+q('spPick').addEventListener('click',()=>{spMsg('Hình mới chỉ đổi ở màn hình '+ws+'. Bấm "Áp dụng" nếu muốn dùng cho cả 4 màn hình.');fileInput.click()});
+q('spVideoPick').addEventListener('click',()=>{spMsg('Video mới chỉ đổi ở màn hình '+ws+'. Bấm "Áp dụng" nếu muốn dùng cho cả 4 màn hình.');videoInput.click()});
+q('spClear').addEventListener('click',()=>{const k=bgKey(),v=vidKey();delete bgMem[k];ls.del(k);delete vidMem[v];ls.del(v);applyBackground();spMsg('Đã xóa hình nền màn hình '+ws+'.')});
+q('spAll').addEventListener('click',()=>{
+const img=getBg(bgKey()),vid=getVid(vidKey());
+if(!img&&!vid){spMsg('Màn hình này chưa có hình nền.');return}
+for(let i=1;i<=4;i++){if(img)saveBg(bgKeyOf(i),img);if(vid)saveVid(vidKeyOf(i),vid)}
+applyBackground();spMsg('Đã áp dụng cho cả 4 màn hình.');
+});
+spClockSec.addEventListener('click',()=>{clockSec=!clockSec;ls.set('linuxweb_clock_sec',clockSec?'1':'0');renderClockSec();updateClock()});
+spStretchBtn.addEventListener('click',()=>{isStretch=!isStretch;ls.set('linuxweb_stretch',isStretch?'1':'0');renderStretch();applyDpi();renderDesk();refreshWindows()});
+b.querySelectorAll('.sp-nav-item').forEach(it=>it.addEventListener('click',()=>{
+b.querySelectorAll('.sp-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===it.dataset.page));
+b.querySelectorAll('.sp-page').forEach(p=>p.classList.toggle('active',p.id==='sp-'+it.dataset.page));
+}));
+bindNum('spTbA',()=>tbA,0,100,v=>{tbA=v;ls.set('linuxweb_tb_a',String(v));applyTheme()});
+bindNum('spIco',()=>icoSz,32,96,v=>{icoSz=v;ls.set('linuxweb_ico',String(v));renderDesk()});
+bindNum('spOpNum',()=>spA,0,100,v=>{spA=v;ls.set('linuxweb_sp_a',String(v));applyOpacity()});
+bindNum('spDpiNum',()=>dpi,70,200,v=>{dpi=v;ls.set('linuxweb_dpi',String(v));applyDpi();renderDesk();refreshWindows()});
+const bColor=q('spTbColor'),bText=q('spTbText');
+bColor.style.background=tbColor;bText.style.background=tbText;
+bColor.addEventListener('click',e=>{e.stopPropagation();openColorPicker('Màu nền Taskbar',tbColor,c=>{tbColor=c;ls.set('linuxweb_tb_color',c);bColor.style.background=c;applyTheme()})});
+bText.addEventListener('click',e=>{e.stopPropagation();openColorPicker('Màu chữ Taskbar',tbText,c=>{tbText=c;ls.set('linuxweb_tb_text',c);bText.style.background=c;applyTheme()})});
+const spAcUser=q('spAcUser'),spAcHost=q('spAcHost'),spAcPw=q('spAcPw'),spAcPwDel=q('spAcPwDel'),spAcLock=q('spAcLock');
+const renderAcc=()=>{spAcUser.textContent=acUser();spAcHost.textContent=acHost();spAcPw.textContent=hasPw()?'Đổi mật khẩu':'Đặt mật khẩu';spAcPwDel.style.display=hasPw()?'':'none';spAcLock.textContent=lockOn()?'Bật':'Tắt';spAcLock.classList.toggle('on',lockOn())};
+const askOld=cb=>{if(!hasPw())return cb();uiPrompt('Mật khẩu hiện tại','',v=>{if(checkPw(v))cb();else uiAlert('Sai mật khẩu.')},'password')};
+q('spAcUserBtn').onclick=()=>uiPrompt('Tên người dùng',acUser(),v=>{if(/^[^\s:\/]{1,24}$/.test(v)){ls.set(K_USER,v);renderAcc()}else uiAlert('Tên không hợp lệ (1-24 ký tự, không có khoảng trắng).')});
+q('spAcHostBtn').onclick=()=>uiPrompt('Tên máy',acHost(),v=>{if(/^[A-Za-z0-9][A-Za-z0-9-]{0,30}$/.test(v)){ls.set(K_HOST,v);renderAcc()}else uiAlert('Tên máy chỉ gồm chữ, số, dấu gạch ngang.')});
+spAcPw.onclick=()=>askOld(()=>uiPrompt('Mật khẩu mới','',v=>{if(v.length<4)return uiAlert('Mật khẩu tối thiểu 4 ký tự.');uiPrompt('Nhập lại mật khẩu mới','',v2=>{if(v2!==v)return uiAlert('Hai mật khẩu không khớp.');setPw(v);renderAcc();uiAlert('Đã lưu mật khẩu.')},'password')},'password'));
+spAcPwDel.onclick=()=>askOld(()=>{setPw('');renderAcc()});
+spAcLock.onclick=()=>{ls.set(K_LOCK,lockOn()?'0':'1');renderAcc()};
+q('spAcSetup').onclick=()=>uiConfirm('Chạy lại thiết lập ban đầu? Ứng dụng sẽ khởi động lại và bạn tạo lại tài khoản.',()=>{ls.del(K_SETUP);location.reload()});
+renderAcc();
+renderClockSec();renderStretch();updateWpPreview();
 }
 $('settingsBtn').addEventListener('click',e=>{e.stopPropagation();dropdown.classList.remove('show');openSettings()});
-
+// ===== Boot / Setup / Màn hình khóa =====
+const K_USER='linuxweb_user',K_HOST='linuxweb_host',K_PW='linuxweb_pw',K_SALT='linuxweb_salt',K_LOCK='linuxweb_lock',K_SETUP='linuxweb_setup';
+const acUser=()=>ls.get(K_USER)||'flsh',acHost=()=>ls.get(K_HOST)||'flsh',hasPw=()=>!!ls.get(K_PW),lockOn=()=>ls.get(K_LOCK)!=='0';
+function hashPw(pw,salt){
+const str=salt+':'+pw;let h1=0xdeadbeef,h2=0x41c6ce57;
+for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
+h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);
+}
+function setPw(pw){if(!pw){ls.del(K_PW);ls.del(K_SALT);return}const salt=Math.random().toString(36).slice(2);ls.set(K_SALT,salt);ls.set(K_PW,hashPw(pw,salt))}
+const checkPw=pw=>!hasPw()||hashPw(pw,ls.get(K_SALT)||'')===ls.get(K_PW);
+const DOW=['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+const sys=E('div');sys.id='sys';document.body.appendChild(sys);
+function sysScreen(cls){sys.className='';sys.innerHTML='';const d=E('div','sys-screen '+cls);sys.appendChild(d);sys.style.display='block';return d}
+function sysHide(){sys.classList.add('sys-out');setTimeout(()=>{sys.style.display='none';sys.innerHTML='';sys.classList.remove('sys-out')},350)}
+function mkLogo(){const i=E('img');i.draggable=false;let st=0;i.addEventListener('error',()=>{st++;if(st===1)i.src=LOGO_FILE;else if(st===2)i.src=LOGO_EMBED});i.src='file:///android_asset/flshlogo.png';return i}
+const OS='flsh linux';
+function runGrub(next){
+const d=sysScreen('grub'),items=[OS,'Advanced options for '+OS,'Memory test (memtest86+x64.efi)','Memory test (memtest86+x64.efi, serial console)','UEFI Firmware Settings'];
+let sel=0,left=5,done=false,tm=null;
+d.innerHTML='<div class="grub-box"></div><div class="grub-h">Use the ↑ and ↓ keys to select which entry is highlighted.<br>Press enter to boot the selected OS, e to edit the commands before booting or c for a command-line. (Tap the screen to boot now)</div><div class="grub-cd"></div>';
+const box=d.querySelector('.grub-box'),cd=d.querySelector('.grub-cd');
+const go=()=>{if(done)return;done=true;clearInterval(tm);document.removeEventListener('keydown',key);next()};
+const paint=()=>{box.innerHTML='';items.forEach((t,i)=>{const r=E('div','grub-it'+(i===sel?' sel':''),t);r.onclick=e=>{e.stopPropagation();sel=i;go()};box.appendChild(r)});cd.textContent='The highlighted entry will be executed automatically in '+left+'s.'};
+const key=e=>{if(e.key==='Enter')go();else if(e.key==='ArrowDown'){sel=Math.min(items.length-1,sel+1);paint()}else if(e.key==='ArrowUp'){sel=Math.max(0,sel-1);paint()}};
+document.addEventListener('keydown',key);d.addEventListener('click',go);
+tm=setInterval(()=>{left--;if(left<=0)go();else paint()},1000);paint();
+}
+const KL=('Linux version 6.12.13-amd64 (devel@flsh.local) (gcc-14 (Debian 14.2.0-12) 14.2.0) #1 SMP PREEMPT_DYNAMIC flsh 6.12.13-1flsh1|Command line: BOOT_IMAGE=/boot/vmlinuz-6.12.13-amd64 root=UUID=7b1c9e#2-#### ro quiet splash|BIOS-provided physical RAM map:|BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable|BIOS-e820: [mem 0x0000000000100000-0x00000000bffdffff] usable|NX (Execute Disable) protection: active|APIC: Static calls initialized|SMBIOS 3.0.0 present.|DMI: flsh/Virtual Machine, BIOS 1.0 01/01/2025|tsc: Detected 2400.000 MHz processor|last_pfn = 0xc0000 max_arch_pfn = 0x400000000|x86/PAT: Configuration [0-7]: WB WC UC- UC WB WP UC- WT|found SMP MP-table at [mem 0x000f####-0x000f####]|Using GB pages for direct mapping|ACPI: Early table checksum verification disabled|ACPI: RSDP 0x00000000000F#### 000024 (v02 BOCHS )|Zone ranges: DMA [mem 0x0000000000001000-0x0000000000ffffff]|Kernel command line: root=UUID=7b1c9e#2 ro quiet splash|Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes, linear)|Memory: 3921068K/4193848K available (16384K kernel code, 3412K rwdata)|SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1|rcu: Hierarchical RCU implementation.|NR_IRQS: 524544, nr_irqs: 456, preallocated irqs: 16|Console: colour VGA+ 80x25|clocksource: tsc-early: mask: 0xffffffffffffffff|Calibrating delay loop (skipped) preset value.. 4800.00 BogoMIPS|pid_max: default: 32768 minimum: 301|LSM: initializing lsm=lockdown,capability,landlock,yama,apparmor,ima,evm|Mount-cache hash table entries: 8192 (order: 4, 65536 bytes, linear)|smpboot: CPU0: ARM64 / Android WebView|smp: Bringing up secondary CPUs ...|smp: Brought up 1 node, 4 CPUs|devtmpfs: initialized|clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff|futex hash table entries: 1024 (order: 4, 65536 bytes, linear)|NET: Registered PF_NETLINK/PF_ROUTE protocol family|audit: initializing netlink subsys (disabled)|thermal_sys: Registered thermal governor step_wise|PCI: Using configuration type 1 for base access|ACPI: Added _OSI(Linux-Dell-Video)|SCSI subsystem initialized|libata version 3.00 loaded.|usbcore: registered new interface driver usbfs|usbcore: registered new interface driver hub|usb usb1: New USB device found, idVendor=1d6b, idProduct=0002|input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input#|NET: Registered PF_INET protocol family|tcp: Hash tables configured (established 32768 bind 32768)|Initialise system trusted keyrings|Key type asymmetric registered|Block layer SCSI generic (bsg) driver version 0.4 loaded|io scheduler mq-deadline registered|virtio_blk virtio1: [vda] 83886080 512-byte logical blocks (42.9 GB/40.0 GiB)|vda: vda1 vda2 vda3|EXT4-fs (vda2): mounted filesystem with ordered data mode. Quota mode: none.|EXT4-fs (vda2): re-mounted. Quota mode: none.|systemd[1]: systemd 257.2-3 running in system mode|systemd[1]: Detected virtualization kvm.|systemd[1]: Detected architecture x86-64.|systemd[1]: Hostname set to <flsh>.|systemd[1]: Queued start job for default target graphical.target.|random: crng init done|Adding 2097148k swap on /dev/vda3.  Priority:-2 extents:1 across:2097148k|audit: type=1400 audit(#########.###:#): apparmor="STATUS" operation="profile_load" name="nvidia_modprobe"|e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX|Bluetooth: Core ver 2.22|Bluetooth: HCI device and connection manager initialized|nf_conntrack: default automatic helper assignment has been turned off|loop: module loaded|snd_hda_intel 0000:00:05.0: enabling device (0000 -> 0002)|iTCO_wdt: Intel TCO WatchDog Timer Driver v1.11|usb 1-1: new high-speed USB device number # using xhci_hcd|fuse: init (API version 7.41)|Loaded X.509 cert Debian Secure Boot CA|Console: switching to colour frame buffer device 128x48').split('|');
+const SD=['Reached target Local File Systems.','Started Journal Service.','Started Create System Users.','Mounted /boot/efi.','Started Rule-based Manager for Device Events and Files.','Finished Load/Save Random Seed.','Reached target Swaps.','Started Network Time Synchronization.','Started Network Manager.','Reached target Network.','Started Authorization Manager.','Started Accounts Service.','Started D-Bus System Message Bus.','Started Bluetooth service.','Started OpenBSD Secure Shell server.','Started PostgreSQL RDBMS.','Started Login Service.','Started User Login Management.','Started Disk Manager.','Started Modem Manager.','Reached target Multi-User System.','Started LightDM Display Manager.','Reached target Graphical Interface.'];
+function runBootLog(next){
+const d=sysScreen('bootlog');let t=0,n=0,k=0;
+const add=h=>{const r=E('div');r.innerHTML=h;d.appendChild(r);while(d.children.length>70)d.firstChild.remove()};
+const hx=s=>s.replace(/#/g,()=>Math.floor(Math.random()*16).toString(16));
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const tm=setInterval(()=>{
+for(let j=0;j<3;j++){
+t+=Math.random()*.05+.002;
+if(n<640){add('['+t.toFixed(6).padStart(12)+'] '+esc(hx(KL[n%KL.length])));n++}
+}
+if(n>=640){
+clearInterval(tm);
+const t2=setInterval(()=>{
+if(k>=SD.length){clearInterval(t2);setTimeout(next,500);return}
+t+=Math.random()*.4;add('<span class="bl-ok">[  OK  ] </span>'+SD[k++]);
+},110);
+}
+},28);
+}
+function runSplash(ms,next){
+const d=sysScreen('splash');d.innerHTML='<div class="bt-logo"></div><div class="bt-bar"><i></i></div>';
+d.querySelector('.bt-logo').appendChild(mkLogo());
+const bar=d.querySelector('i');requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition='width '+ms+'ms linear';bar.style.width='100%'}));
+setTimeout(next,ms+250);
+}
+function runSetup(done){
+const d=sysScreen('di'),data={host:'flsh',dom:'',full:'',user:'flsh',pw:''};
+d.appendChild(E('div','di-top',OS+' installer'));
+const win=E('div','di-w');d.appendChild(win);
+function scr(title,build,back,next,nextTxt){
+win.innerHTML='';win.appendChild(E('div','di-title','[!!] '+title));
+const bd=E('div','di-body'),err=E('div','di-err');win.appendChild(bd);
+const get=build(bd);bd.appendChild(err);
+const bt=E('div','di-btns');
+if(back){const b=E('button','di-b','<'+T('Go Back','Quay lại')+'>');b.onclick=back;bt.appendChild(b)}
+const c=E('button','di-b f','<'+(nextTxt||T('Continue','Tiếp tục'))+'>');c.onclick=()=>{const m=next(get());if(m)err.textContent=m};bt.appendChild(c);win.appendChild(bt);
+}
+const txt=(p,s)=>p.appendChild(E('div','di-p',s));
+function list(p,items,def){
+let sel=def;const l=E('div','di-list');
+items.forEach(([v,lab])=>{const r=E('div','di-i'+(v===sel?' sel':''),lab);r.onclick=()=>{sel=v;[...l.children].forEach(c=>c.classList.toggle('sel',c===r))};l.appendChild(r)});
+p.appendChild(l);return()=>sel;
+}
+const inp=(p,type,val)=>{const i=E('input','di-in');i.type=type;i.value=val||'';i.autocomplete='off';i.autocapitalize='off';i.spellcheck=false;i.addEventListener('keydown',e=>e.stopPropagation());p.appendChild(i);return i};
+function s0(){scr('Select a language / Chọn ngôn ngữ',p=>{txt(p,'Choose the language to be used for the installation process. The selected language will also be the default language for the installed system.');return list(p,[['en','English'],['vi','Tiếng Việt - Vietnamese']],lang)},null,v=>{setLang(v);s1()})}
+function s1(){scr(T('Select your location','Chọn vị trí của bạn'),p=>{txt(p,T('The selected location will be used to set your time zone and also help to choose the system locale.','Vị trí được chọn dùng để đặt múi giờ và ngôn ngữ hệ thống.'));return list(p,[['VN','Viet Nam'],['US','United States'],['GB','United Kingdom'],['AU','Australia'],['CA','Canada'],['OT',T('other','khác')]],lang==='vi'?'VN':'US')},s0,()=>s2())}
+function s2(){scr(T('Configure the keyboard','Cấu hình bàn phím'),p=>{txt(p,T('Keymap to use:','Kiểu bàn phím:'));return list(p,[['us','American English'],['vn','Vietnamese'],['gb','British English']],lang==='vi'?'vn':'us')},s1,()=>s3())}
+function s3(){scr(T('Configure the network','Cấu hình mạng'),p=>{txt(p,T('Please enter the hostname for this system.\n\nThe hostname is a single word that identifies your system on the network.','Nhập tên máy (hostname) cho hệ thống.\n\nTên máy là một từ duy nhất để nhận diện máy trên mạng.'));const i0=inp(p,'text',data.host);return()=>i0},s2,i=>{const v=i.value.trim();if(!/^[A-Za-z0-9][A-Za-z0-9-]{0,30}$/.test(v))return T('Invalid hostname (letters, digits, hyphen).','Tên máy không hợp lệ (chữ, số, gạch ngang).');data.host=v;s4()})}
+function s4(){scr(T('Configure the network','Cấu hình mạng'),p=>{txt(p,T('The domain name is the part of your Internet address to the right of your host name. If you are setting up a home network, you can make something up, but make sure you use the same domain name on all your computers.\n\nDomain name:','Tên miền là phần địa chỉ bên phải tên máy. Có thể để trống.\n\nTên miền:'));const i0=inp(p,'text',data.dom);return()=>i0},s3,i=>{data.dom=i.value.trim();s5()})}
+function s5(){scr(T('Set up users and passwords','Thiết lập người dùng và mật khẩu'),p=>{txt(p,T('A user account will be created for you to use instead of the root account.\n\nFull name for the new user:','Một tài khoản sẽ được tạo để dùng thay cho root.\n\nHọ tên người dùng mới:'));const f=inp(p,'text',data.full);txt(p,T('Username for your account:','Tên đăng nhập:'));const u=inp(p,'text',data.user);return()=>[f,u]},s4,([f,u])=>{const uv=u.value.trim();if(!/^[a-z_][a-z0-9_-]{0,23}$/.test(uv))return T('Invalid username (start with a lowercase letter, max 24 chars).','Tên đăng nhập không hợp lệ (chữ thường, tối đa 24 ký tự).');data.full=f.value.trim();data.user=uv;s6()})}
+function s6(){scr(T('Set up users and passwords','Thiết lập người dùng và mật khẩu'),p=>{txt(p,T('Choose a password for the new user (leave empty for none):','Chọn mật khẩu cho người dùng (để trống nếu không dùng):'));const a=inp(p,'password','');txt(p,T('Re-enter password to verify:','Nhập lại mật khẩu:'));const b=inp(p,'password','');return()=>[a,b]},s5,([a,b])=>{if(a.value!==b.value)return T('Password input error: the passwords do not match.','Hai mật khẩu không khớp.');if(a.value&&a.value.length<4)return T('Password must be at least 4 characters.','Mật khẩu tối thiểu 4 ký tự.');data.pw=a.value;s7()})}
+function s7(){scr(T('Partition disks','Phân vùng ổ đĩa'),p=>{txt(p,T('The installer can guide you through partitioning a disk or you can do it manually.\n\nPartitioning method:','Trình cài đặt có thể tự phân vùng hoặc bạn làm thủ công.\n\nPhương pháp:'));return list(p,[['a',T('Guided - use entire disk','Tự động - dùng toàn bộ ổ đĩa')],['b',T('Guided - use entire disk and set up LVM','Tự động - toàn bộ ổ đĩa và LVM')],['c',T('Manual','Thủ công')]],'a')},s6,()=>s8(),T('Install','Cài đặt'))}
+function s8(){
+win.innerHTML='';win.appendChild(E('div','di-title','[!!] '+T('Installing the system','Đang cài đặt hệ thống')));
+const bd=E('div','di-body'),bar=E('div','di-bar'),bi=E('i'),log=E('div','di-log');bar.appendChild(bi);
+bd.appendChild(E('div','di-p',T('Please wait while the system is installed.','Vui lòng chờ trong khi hệ thống được cài đặt.')));bd.appendChild(bar);bd.appendChild(log);win.appendChild(bd);
+ls.set(K_HOST,data.host);ls.set(K_USER,data.user);setPw(data.pw);ls.set(K_LOCK,'1');
+const st=T('Partitioning disk...|Creating ext4 file system...|Mounting /target...|Installing the base system...|Retrieving linux-image-amd64...|Unpacking flsh-desktop-xfce...|Selecting and installing software...|Configuring apt...|Creating user "'+data.user+'"...|Setting hostname "'+data.host+'"...|Installing the GRUB boot loader...|Finishing the installation...','Phân vùng ổ đĩa...|Tạo hệ thống tệp ext4...|Gắn /target...|Cài đặt hệ thống cơ sở...|Tải linux-image-amd64...|Giải nén flsh-desktop-xfce...|Chọn và cài phần mềm...|Cấu hình apt...|Tạo người dùng "'+data.user+'"...|Đặt tên máy "'+data.host+'"...|Cài bộ khởi động GRUB...|Hoàn tất cài đặt...').split('|');
+let k=0;const tm=setInterval(()=>{
+k++;bi.style.width=Math.round(k/st.length*100)+'%';log.appendChild(E('div','',st[k-1]));while(log.children.length>6)log.firstChild.remove();
+if(k>=st.length){clearInterval(tm);setTimeout(s9,500)}
+},650);
+}
+function s9(){ls.set(K_SETUP,'1');scr(T('Finish the installation','Hoàn tất cài đặt'),p=>{txt(p,T('Installation complete\n\nInstallation is complete, so it is time to boot into your new system. Make sure to remove the installation media.','Cài đặt hoàn tất\n\nĐã đến lúc khởi động vào hệ thống mới.'));return()=>0},null,()=>done())}
+s0();
+}
+let lockTimer=null;
+function reboot(){runSplash(2200,()=>location.reload())}
+function blackThen(cb){sysScreen('bootlog');setTimeout(cb,3500)}
+function showLock(){
+closeCtx();dropdown.classList.remove('show');
+const d=sysScreen('klock');
+d.innerHTML='<div class="kl-st"><span class="kl-clock"></span><span class="kl-pw" title="Restart">⏻</span></div><div class="kl-box"><div class="kl-id"><div class="kl-av"></div><div class="kl-user"></div></div><div class="kl-lb"></div><input class="kl-in" type="password" autocomplete="off"><div class="kl-err"></div><div class="kl-btns"><button class="kl-b kl-c"></button><button class="kl-b kl-u"></button></div><div class="kl-oth"></div></div>';
+const q=x=>d.querySelector(x),inp=q('.kl-in'),err=q('.kl-err'),nopw=!hasPw();
+q('.kl-user').textContent=acUser();q('.kl-av').appendChild(mkLogo());
+q('.kl-lb').textContent=T('Password:','Mật khẩu:');q('.kl-c').textContent=T('Cancel','Hủy');q('.kl-u').textContent=T('Unlock','Mở khóa');q('.kl-oth').textContent=T('Log in as another user','Đăng nhập bằng người dùng khác');
+const DE=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const tick=()=>{const n=new Date(),p=v=>String(v).padStart(2,'0');q('.kl-clock').textContent=(lang==='vi'?DOW[n.getDay()]:DE[n.getDay()])+' '+p(n.getHours())+':'+p(n.getMinutes())};
+tick();clearInterval(lockTimer);lockTimer=setInterval(tick,5000);
+if(nopw){inp.style.display='none';q('.kl-lb').style.display='none'}
+const unlock=()=>{clearInterval(lockTimer);sysHide()};
+const attempt=()=>{
+if(checkPw(inp.value)){unlock();return}
+err.textContent=T('Authentication failure','Xác thực thất bại');inp.classList.remove('shake');void inp.offsetWidth;inp.classList.add('shake');inp.value='';try{inp.focus()}catch(e){}
+};
+q('.kl-u').onclick=attempt;q('.kl-c').onclick=()=>{inp.value='';err.textContent=''};
+q('.kl-oth').onclick=()=>{err.textContent=T('No other users','Không có người dùng khác')};
+inp.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')attempt()});
+q('.kl-pw').onclick=reboot;
+if(!nopw&&!('ontouchstart' in window))setTimeout(()=>{try{inp.focus()}catch(e){}},80);
+}
+$('lockBtn').addEventListener('click',e=>{e.stopPropagation();showLock()});
 window.addEventListener('resize',()=>{applyDpi();renderDesk();refreshWindows();closeCtx()});
 window.addEventListener('orientationchange',()=>setTimeout(()=>{applyDpi();renderDesk();refreshWindows()},150));
-applyOpacity();renderWs();applyBackground();applyHz();refresh();updateClock();renderWinBar();
-
+applyOpacity();renderWs();applyBackground();applyHz();refresh();updateClock();renderWinBar();startI18n();
+if(ls.get(K_SETUP)!=='1')runGrub(()=>runBootLog(()=>runSetup(()=>blackThen(()=>{if(lockOn())showLock();else sysHide()}))));
+else if(lockOn())showLock();
 }catch(error){
-  document.body.innerHTML='<div style="color:#f87171;padding:20px;font-size:16px;white-space:pre-wrap"></div>';
-  document.body.firstChild.textContent='Lỗi JavaScript: '+error.message+(error.stack?'\n'+error.stack.split('\n')[1]:'');
+document.body.innerHTML='<div style="color:#f87171;padding:20px;font-size:16px;white-space:pre-wrap"></div>';
+document.body.firstChild.textContent='Lỗi JavaScript: '+error.message+(error.stack?'\n'+error.stack.split('\n')[1]:'');
 }
 })();
 </script>
