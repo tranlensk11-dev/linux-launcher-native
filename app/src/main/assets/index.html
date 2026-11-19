@@ -663,7 +663,7 @@ const same=(a,b)=>a.name===b.name&&(a.target||'')===(b.target||'');
 function allApps(){const seen=[],o=[];sections.forEach(s=>s.apps.forEach(a=>{if(!seen.some(x=>same(x,a))){seen.push(a);o.push(a)}}));return o.sort((x,y)=>x.name.localeCompare(y.name))}
 const findApp=p=>{for(const s of sections)for(const a of s.apps)if(same(a,p))return a;return null};
 const secs=()=>sections.concat([{name:'Recently used',v:1,apps:recent.map(r=>findApp(r)||r)},{name:'All',v:1,apps:allApps()}]);
-const save=()=>{ls.set(KEY_SEC,JSON.stringify(sections));ls.set(KEY_PIN,JSON.stringify(pinned));ls.set(KEY_DESK,JSON.stringify(desk));ls.set(KEY_REC,JSON.stringify(recent))};
+const save=()=>{if(window.__wiped)return;ls.set(KEY_SEC,JSON.stringify(sections));ls.set(KEY_PIN,JSON.stringify(pinned));ls.set(KEY_DESK,JSON.stringify(desk));ls.set(KEY_REC,JSON.stringify(recent))};
 const pinIdx=a=>pinned.findIndex(p=>same(p,a)),deskList=()=>desk[ws]||(desk[ws]=[]),deskIdx=a=>deskList().findIndex(p=>same(p,a));
 const iconCache={};
 function getAppIconSrc(target){
@@ -986,7 +986,7 @@ function setPw(pw){if(!pw){ls.del(K_PW);ls.del(K_SALT);return}const salt=Math.ra
 const checkPw=pw=>!hasPw()||hashPw(pw,ls.get(K_SALT)||'')===ls.get(K_PW);
 const DOW=['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
 const sys=E('div');sys.id='sys';document.body.appendChild(sys);
-function sysScreen(cls){sys.className='';sys.innerHTML='';const d=E('div','sys-screen '+cls);sys.appendChild(d);sys.style.display='block';return d}
+function sysScreen(cls){sys.style.background=cls==='klock'?'transparent':'#000';sys.className='';sys.innerHTML='';const d=E('div','sys-screen '+cls);sys.appendChild(d);sys.style.display='block';return d}
 function sysHide(){sys.classList.add('sys-out');setTimeout(()=>{sys.style.display='none';sys.innerHTML='';sys.classList.remove('sys-out')},350)}
 function mkLogo(){const i=E('img');i.draggable=false;let st=0;i.addEventListener('error',()=>{st++;if(st===1)i.src=LOGO_FILE;else if(st===2)i.src=LOGO_EMBED});i.src='file:///android_asset/flshlogo.png';return i}
 const OS='flsh linux';
@@ -1059,7 +1059,7 @@ function s8(){
 win.innerHTML='';win.appendChild(E('div','di-title','[!!] '+T('Installing the system','Đang cài đặt hệ thống')));
 const bd=E('div','di-body'),bar=E('div','di-bar'),bi=E('i'),log=E('div','di-log');bar.appendChild(bi);
 bd.appendChild(E('div','di-p',T('Please wait while the system is installed.','Vui lòng chờ trong khi hệ thống được cài đặt.')));bd.appendChild(bar);bd.appendChild(log);win.appendChild(bd);
-ls.set(K_HOST,data.host);ls.set(K_USER,data.user);setPw(data.pw);ls.set(K_LOCK,'1');
+window.__wiped=1;try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(/^(linuxweb_|k_)/.test(k))localStorage.removeItem(k)}}catch(e){}ls.set(K_HOST,data.host);ls.set(K_USER,data.user);setPw(data.pw);ls.set(K_LOCK,'1');ls.set('linuxweb_lang',lang);
 const st=T('Partitioning disk...|Creating ext4 file system...|Mounting /target...|Installing the base system...|Retrieving linux-image-amd64...|Unpacking flsh-desktop-xfce...|Selecting and installing software...|Configuring apt...|Creating user "'+data.user+'"...|Setting hostname "'+data.host+'"...|Installing the GRUB boot loader...|Finishing the installation...','Phân vùng ổ đĩa...|Tạo hệ thống tệp ext4...|Gắn /target...|Cài đặt hệ thống cơ sở...|Tải linux-image-amd64...|Giải nén flsh-desktop-xfce...|Chọn và cài phần mềm...|Cấu hình apt...|Tạo người dùng "'+data.user+'"...|Đặt tên máy "'+data.host+'"...|Cài bộ khởi động GRUB...|Hoàn tất cài đặt...').split('|');
 let k=0;const tm=setInterval(()=>{
 k++;bi.style.width=Math.round(k/st.length*100)+'%';log.appendChild(E('div','',st[k-1]));while(log.children.length>6)log.firstChild.remove();
@@ -1098,7 +1098,7 @@ $('lockBtn').addEventListener('click',e=>{e.stopPropagation();showLock()});
 window.addEventListener('resize',()=>{applyDpi();renderDesk();refreshWindows();closeCtx()});
 window.addEventListener('orientationchange',()=>setTimeout(()=>{applyDpi();renderDesk();refreshWindows()},150));
 applyOpacity();renderWs();applyBackground();applyHz();refresh();updateClock();renderWinBar();startI18n();
-if(ls.get(K_SETUP)!=='1')runGrub(()=>runBootLog(()=>runSetup(()=>blackThen(()=>{if(lockOn())showLock();else sysHide()}))));
+if(ls.get(K_SETUP)!=='1')runGrub(()=>runBootLog(()=>runSetup(()=>blackThen(()=>location.reload()))));
 else if(lockOn())showLock();
 }catch(error){
 document.body.innerHTML='<div style="color:#f87171;padding:20px;font-size:16px;white-space:pre-wrap"></div>';
